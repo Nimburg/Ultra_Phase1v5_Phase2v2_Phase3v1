@@ -1,0 +1,4 @@
+Please have your pre-tokenize data files organized in a sub-folder of this data folder.
+
+MarkedTag_keyword1.csv and MarkedTag_keyword1.csv are example tag files 
+used by Phase2v2 to generate pre-tokenize data files.

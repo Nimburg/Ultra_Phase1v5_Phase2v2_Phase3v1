@@ -1,0 +1,3 @@
+This is a brief note on this project. 
+
+For more details, please check documentation. 
