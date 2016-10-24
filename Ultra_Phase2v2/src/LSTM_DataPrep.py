@@ -71,7 +71,7 @@ def get_dataset_file(dataset, default_dataset, path_dataset):
 	---
 	dataset: name of the data set; name of both .pkl files
 	path_dataset: path to the data set under folder Data
-				e.g. "Data/DataSet_Tokenize"
+				e.g. "../Data/DataSet_Tokenize"
 
 	'''
 	data_dir, data_file = os.path.split(dataset)
@@ -79,7 +79,6 @@ def get_dataset_file(dataset, default_dataset, path_dataset):
 		# Check if dataset is in the data directory.
 		new_path = os.path.join(
 			os.path.split(__file__)[0],
-			"..",
 			path_dataset,
 			dataset
 		)
@@ -96,8 +95,6 @@ def load_data(dataset, path_dataset, n_words=60000, valid_portion=0.1, maxlen=No
 			  sort_by_len=True):
 	'''
 	Loads the dataset
-
-
 	'''
 	#################################################################
 	# Load the dataset
@@ -198,6 +195,92 @@ def load_data(dataset, path_dataset, n_words=60000, valid_portion=0.1, maxlen=No
 '''
 ####################################################################################
 '''
+
+def load_data_for_prediction(dataset, path_dataset, 
+							 n_words=60000, maxlen=None, sort_by_len=True):
+	'''
+	Loads the dataset for prediction
+	thus not test and validation set. 
+	'''
+	#################################################################
+	# Load the dataset
+	dataset = get_dataset_file(dataset=dataset, default_dataset="tweetText_tagScore.pkl", 
+							   path_dataset= path_dataset) 
+	print "load data: ", dataset
+
+	if dataset.endswith(".gz"):
+		f = gzip.open(dataset, 'rb')
+	else:
+		f = open(dataset, 'rb')
+
+	# datafile should be created with only 1 pkl.dump()
+	# and its Y values are meaningless, although with the correct max value inserted
+	single_data_set = pickle.load(f)
+
+	print "check single_data_set: "
+	print single_data_set[0][:3]
+	print single_data_set[1][:3]	
+
+	f.close()
+	#################################################################	
+
+	# limit sentence length by maxlen
+	if maxlen:
+		new_single_data_set_x = []
+		new_single_data_set_y = []
+		for x, y in zip(single_data_set[0], single_data_set[1]):
+			if len(x) < maxlen:
+				new_single_data_set_x.append(x)
+				new_single_data_set_y.append(y)
+		single_data_set = (new_single_data_set_x, new_single_data_set_y)
+		del new_single_data_set_x, new_single_data_set_y
+
+	#################################################################
+	def remove_unk(x):
+		# flag words by whether their frequency is above the threshold or not
+		# threshod set by n_words and the dict() used to word2index 
+		return [ [1 if w >= n_words else w for w in sen] for sen in x ]
+	#################################################################
+
+	single_data_set_x, single_data_set_y = single_data_set
+	single_data_set_x = remove_unk(single_data_set_x)
+
+	#################################################################
+	def len_argsort(seq):
+		# seq: list of lists
+		# sort seq by its elements length
+		return sorted( range( len(seq) ), key=lambda x: len(seq[x])
+					 )
+	#################################################################
+
+	if sort_by_len:
+		sorted_index = len_argsort(single_data_set_x)
+		single_data_set_x = [single_data_set_x[i] for i in sorted_index]
+		single_data_set_y = [single_data_set_y[i] for i in sorted_index]
+
+	single_data_set = (single_data_set_x, single_data_set_y)
+	
+	#################################################################
+	return single_data_set
+
+'''
+####################################################################################
+'''
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -568,7 +568,6 @@ def pred_error(f_pred, prepare_data, data, iterator, verbose=False):
 	prepare_data: prepare_data for that dataset. IS a function
 	data:
 	iterator:
-
 	"""
 	valid_err = 0
 	for _, valid_index in iterator:
@@ -594,7 +593,7 @@ def train_lstm(
 	dim_proj=256,  
 	# word embeding dimension and LSTM number of hidden units.
 	
-	patience=10,  # Number of epoch to wait before early stop if no progress
+	patience=3,  # Number of epoch to wait before early stop if no progress
 	max_epochs=5000,  # The maximum number of epoch to run
 	dispFreq=10,  # Display to stdout the training progress every N updates
 	decay_c=0.,  # Weight decay for the classifier applied to the U weights.
@@ -624,7 +623,7 @@ def train_lstm(
 	dataset='tweetText_tagScore.pkl',
 	# name of the data set; also name of the .pkl file
 	# datasets = {'Name?': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
-	dataset_path="Data/DataSet_Tokenize",
+	dataset_path="../Data/DataSet_Tokenize",
 	# path to the data set
 
 	# Parameter for extra option
@@ -639,7 +638,7 @@ def train_lstm(
 	# Model options
 	# this will get all the varialbe:value from def train_lstm into a dict
 	model_options = locals().copy()
-	print("model options", model_options)
+	print("Initial model options", model_options)
 	# get data from dataset named as 'dataset'
 	# datasets = {'tweetText_tupleScores': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
 	load_data, prepare_data = get_dataset(dataset)
@@ -825,15 +824,145 @@ def train_lstm(
 		(eidx + 1), (end_time - start_time) / (1. * (eidx + 1))))
 	print( ('Training took %.1fs' %
 			(end_time - start_time)), file=sys.stderr)
-	return train_err, valid_err, test_err
+	
+
+	####################################################################################
+	# return dict() of model_options
+	print("Final model options", model_options)	
+	return model_options
 
 """
 ####################################################################################
 
 Load Parameter and Prediction Codes
 
+model options: {
+	'dataset': 'trainAgainst_hillary.pkl', 
+	'loadfrom': 'lstm_model_trainAgainst_hillary.npz', 
+	'validFreq': 370, 
+	'n_words': 12000, 
+	'batch_size': 16, 
+	'decay_c': 0.0, 
+	'patience': 3, 
+	'reload_model': None, 
+	'lrate': 0.0001, 
+	'max_epochs': 100, 
+	'dispFreq': 10, 
+	'encoder': 'lstm',
+
+	'optimizer': <function adadelta at 0x0000000014C54C18>, 
+
+	'valid_batch_size': 64, 
+	'use_dropout': True, 
+	'dim_proj': 256, 
+	'maxlen': 100, 
+	'saveto': 'lstm_model_trainAgainst_hillary.npz', 
+	'noise_std': 0.0, 
+	'test_size': -1, 
+	'saveFreq': 1110, 
+	'dataset_path': '../Data/DataSet_Tokenize/'
+}
+
 ####################################################################################
 """
+
+def load_predict_lstm(model_options, dataset, dataset_path):
+
+	####################################################################################
+	# load model_options (dict) from train_lstm
+	n_words = model_options['n_words']	
+	maxlen = model_options['maxlen']
+	# parameter dict path
+	loadfrom = model_options['loadfrom']
+	# dataset path
+	dataset = dataset
+	dataset_path = dataset_path
+
+	reload_model = True # naturally
+	# size of each batch during prediction process
+	batch_size = model_options['batch_size']
+
+	####################################################################################
+	# data prep functions
+	load_data = LSTM_DataPrep.load_data_for_prediction
+	prepare_data = LSTM_DataPrep.prepare_data
+
+	print('Loading data')
+	dataset4prediction = load_data(dataset=dataset, path_dataset=dataset_path, 
+								   n_words=n_words, maxlen=maxlen)
+
+	# dataset4prediction[1] gives the 2nd value in the tuple: train_set_y, which is a list of Y values
+	# e.g. ydim = max(0,1)+1 = 2
+	ydim = numpy.max(dataset4prediction[1]) + 1
+	if model_options['ydim'] != ydim:
+		print "Error: prediction data set ydim NOT MATCHING training data set ydim"
+		print "training data set ydim: %i" % model_options['ydim']
+		print "prediction data set ydim: %i" % ydim
+		# force exit
+		return None
+
+	##################
+	# Building Model #
+	##################
+	print('Building model')
+	# This create the initial parameters as numpy ndarrays.
+	params = init_params(model_options)
+	# loading previous parameters or not
+	if reload_model:
+		load_params(path=loadfrom, params=params)
+	# This create Theano Shared Variable from the parameters.
+	tparams = init_tparams(params)
+	
+	# build_model()
+	(use_noise, x, mask, y, 
+		f_pred_prob, f_pred, cost) = build_model(tparams, model_options)
+
+	######################
+	# Predicting Results #
+	######################
+	print('Making Predictions')
+	print("%d prediction examples" % len( dataset4prediction[0] ) )
+
+	try:
+		# pred_index_batches_... is a list of the indexes (list) 
+		# of samples per each minibatch of all minibatches
+		pred_index_batches = get_minibatches_idx(len(dataset4prediction[0]), batch_size, 
+								 shuffle=False)
+		n_samples = 0
+		for _, pred_index in pred_index_batches:
+			
+			########################
+			# preds and preds_prob #
+			########################
+			
+			# Select the examples for this minibatch
+			y = [ dataset4prediction[1][t] for t in pred_index ]
+			x = [ dataset4prediction[0][t] for t in pred_index ]
+			# Get the data in numpy.ndarray format
+			# This swap the axis!
+			# Return something of shape (minibatch maxlen, n samples)
+			# LSTM_DataPrep.prepare_data(seqs, labels, maxlen=None)
+			x, mask, y = prepare_data(x, y)
+			n_samples += x.shape[1]
+			# f_pred_prob = theano.function([x, mask], pred, name='f_pred_prob')
+			# f_pred = theano.function([x, mask], pred.argmax(axis=1), name='f_pred')
+			preds_prob = f_pred_prob(x, mask)
+			preds = f_pred(x, mask)
+			# end of this minibatch, n_samples cumulated through all minibatches
+			print('Seen %d samples' % n_samples)
+
+
+
+
+
+	except KeyboardInterrupt:
+		print("Training interupted")
+
+
+
+
+
+
 
 """
 ####################################################################################
@@ -843,8 +972,8 @@ Test Codes
 ####################################################################################
 """
 
-
 if __name__ == '__main__':
+	'''
 	# See function train for all possible parameter and there definition.
 	train_lstm(
 		max_epochs=100,
@@ -857,7 +986,7 @@ if __name__ == '__main__':
 		dataset='tweetText_tagScore.pkl',
 		# name of the data set, 'sth.pkl'; also name of the .pkl file
 		# datasets = {'Name?': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
-		dataset_path="Data/DataSet_Tokenize",
+		dataset_path="../Data/DataSet_Tokenize",
 		# path to the data set
 
 		saveto='lstm_model.npz',
@@ -865,12 +994,210 @@ if __name__ == '__main__':
 		reload_model=None # whether reload revious parameter or not
 
 	)
+	'''
+	####################################################################################
+	dict_tokenizeParameters_trainAgainst_trump = {
+		'dataset':'trainAgainst_trump', 
+		# PLUS .pkl or dict.pkl for LSTM
+		'dataset_path': '../Data/DataSet_Tokenize/',
+		'tokenizer_path': './scripts/tokenizer/',
+		# same for all cases
+		'lstm_saveto': 'lstm_model_trainAgainst_trump.npz',
+		'lstm_loadfrom':'lstm_model_trainAgainst_trump.npz',
+		# LSTM model parameter save/load
+		'Yvalue_list':['posi_trump', 'neg_trump'],
+		# root name for cases to be considered
+		'posi_trump_folder':['posi_neut', 'posi_neg'],
+		'neg_trump_folder':['neg_posi', 'neg_neut', 'neg_neg'],
+		
+		'posi_trump_score':1,
+		'neg_trump_score':0
+		}
+	
+	dict_tokenizeParameters_trainAgainst_hillary = {
+		'dataset':'trainAgainst_hillary', 
+		# PLUS .pkl or dict.pkl for LSTM
+		'dataset_path': '../Data/DataSet_Tokenize/',
+		'tokenizer_path': './scripts/tokenizer/',
+		# same for all cases
+		'lstm_saveto': 'lstm_model_trainAgainst_hillary.npz',
+		'lstm_loadfrom':'lstm_model_trainAgainst_hillary.npz',
+		# LSTM model parameter save/load
+		'Yvalue_list':['posi_hillary', 'neg_hillary'],
+		# root name for cases to be considered
+		'posi_hillary_folder':['neut_posi', 'neg_posi'],
+		'neg_hillary_folder':['posi_neg', 'neut_neg', 'neg_neg'],
+		
+		'posi_hillary_score':1,
+		'neg_hillary_score':0
+		}
+
+	dict_tokenizeParameters_trainAgainst_trumphillary = {
+		'dataset':'trainAgainst_trumphillary', 
+		# PLUS .pkl or dict.pkl for LSTM
+		'dataset_path': '../Data/DataSet_Tokenize/',
+		'tokenizer_path': './scripts/tokenizer/',
+		# same for all cases
+		'lstm_saveto': 'lstm_model_trainAgainst_trumphillary.npz',
+		'lstm_loadfrom':'lstm_model_trainAgainst_trumphillary.npz',
+		# LSTM model parameter save/load
+		'Yvalue_list':['trump', 'hillary', 'neutral'],
+		# root name for cases to be considered
+		'trump_folder':['posi_neut', 'posi_neg'],
+		'hillary_folder':['neut_posi', 'neg_posi'],
+		'neutral_folder':['neg_neg'],
+		
+		'trump_score':2,
+		'hillary_score':0,
+		'neutral_score':1,
+		}
+
+	####################################################################################
+	para_dataset = dict_tokenizeParameters_trainAgainst_hillary['dataset'] + '.pkl'
+	para_dataset_path = dict_tokenizeParameters_trainAgainst_hillary['dataset_path']
+
+	para_n_words = 12000
+	# 230751  total words  19502  unique words
+	# 177728  total words  15751  unique words
+	# 43113  total words  6723  unique words
+
+	para_saveto = dict_tokenizeParameters_trainAgainst_hillary['lstm_saveto']
+	para_loadfrom = para_saveto
+
+	model_options = train_lstm(
+		max_epochs=100,
+		test_size=-1, 
+		# If >0, we keep only this number of test example.
+		
+		dim_proj=256, # word embeding dimension and LSTM number of hidden units.
+		n_words=para_n_words, # Vocabulary size
+		
+		dataset=para_dataset,
+		# name of the data set, 'sth.pkl'; also name of the .pkl file
+		# datasets = {'Name?': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
+		dataset_path=para_dataset_path,
+		# path to the data set
+
+		saveto=para_saveto,
+		loadfrom = para_loadfrom,
+		reload_model=None # whether reload revious parameter or not
+	)
 
 
 
 
 
 
+
+
+
+
+
+
+'''
+####################################################################################
+
+dict_tokenizeParameters_trainAgainst_trump
+dim_proj=256
+n_words=10000 out of 19502
+
+Epoch  0 Update  370 Cost  0.359852433205
+('Train ', 0.098391401572531234, 'Valid ', 0.0931506849315068, 'Test ', 0.096908939014202167)
+Epoch  0 Update  380 Cost  0.404751211405
+
+Epoch  4 Update  4070 Cost  0.0156991314143
+('Train ', 0.0098824208324316265, 'Valid ', 0.024657534246575352, 'Test ', 0.028682818156502421)
+Epoch  4 Update  4080 Cost  0.0406259484589
+
+Epoch  5 Update  5180 Cost  0.0187643319368
+('Train ', 0.0038231263074370858, 'Valid ', 0.020547945205479423, 'Test ', 0.021442495126705707)
+Epoch  5 Update  5190 Cost  0.0154427438974
+
+####################################################################################
+
+dict_tokenizeParameters_trainAgainst_hillary
+dim_proj=256
+n_words=10000 out of 15751
+
+number of cases of posi_hillary of score 1: 345
+size of training set X&Y: 345, 345
+number of cases of neg_hillary of score 0: 11393
+size of training set X&Y: 11738, 11738
+
+Epoch  0 Update  370 Cost  0.232056573033
+('Train ', 0.029544633176725732, 'Valid ', 0.024013722126929649, 'Test ', 0.027583914921900932)
+Epoch  0 Update  380 Cost  0.021654073149
+
+Epoch  3 Update  2220 Cost  0.0270751230419
+('Train ', 0.02041922659920492, 'Valid ', 0.015437392795883409, 'Test ', 0.019607843137254943)
+Epoch  3 Update  2230 Cost  0.0829429253936
+
+Epoch  6 Update  4810 Cost  0.0127623127773
+('Train ', 0.0035236718467654971, 'Valid ', 0.018867924528301883, 'Test ', 0.015952143569292088)
+Epoch  6 Update  4820 Cost  0.00353421084583
+
+Epoch  11 Update  8140 Cost  0.00812957342714
+('Train ', 0.00054210336104087986, 'Valid ', 0.015437392795883409, 'Test ', 0.011631771352608844)
+Early Stop!
+
+####################################################################################
+
+dict_tokenizeParameters_trainAgainst_trumphillary
+dim_proj=256
+n_words=4500 out of 6723
+
+number of cases of trump of score 2: 1432
+size of training set X&Y: 1432, 1432
+number of cases of hillary of score 0: 341
+size of training set X&Y: 1773, 1773
+number of cases of neutral of score 1: 1187
+size of training set X&Y: 2960, 2960
+
+Epoch  2 Update  370 Cost  1.01258981228
+('Train ', 0.4939544807965861, 'Valid ', 0.46621621621621623, 'Test ', 0.48753462603878117)
+Epoch  2 Update  380 Cost  0.82085442543
+
+Epoch  12 Update  2220 Cost  0.0179200656712
+('Train ', 0.0024893314366998265, 'Valid ', 0.22297297297297303, 'Test ', 0.20360110803324105)
+Epoch  12 Update  2230 Cost  0.0266376640648
+
+Epoch  23 Update  4070 Cost  0.00119850691408
+('Train ', 0.0, 'Valid ', 0.2567567567567568, 'Test ', 0.23684210526315785)
+Early Stop!
+
+####################################################################################
+
+dict_tokenizeParameters_trainAgainst_trumphillary
+dim_proj=256
+n_words=6000 out of 6723
+
+number of cases of trump of score 2: 1432
+size of training set X&Y: 1432, 1432
+number of cases of hillary of score 0: 341
+size of training set X&Y: 1773, 1773
+number of cases of neutral of score 1: 1187
+size of training set X&Y: 2960, 2960
+
+Epoch  2 Update  370 Cost  1.11635255814
+('Train ', 0.51066856330014221, 'Valid ', 0.4932432432432432, 'Test ', 0.50969529085872578)
+Epoch  2 Update  380 Cost  0.882966160774
+
+Epoch  8 Update  1480 Cost  0.196475118399
+('Train ', 0.012446657183499243, 'Valid ', 0.19594594594594594, 'Test ', 0.19390581717451527)
+Epoch  8 Update  1490 Cost  0.0531963817775
+
+Epoch  21 Update  3700 Cost  0.000893165648449
+('Train ', 0.00035561877667145136, 'Valid ', 0.26351351351351349, 'Test ', 0.25484764542936289)
+Early Stop!
+
+
+
+
+
+
+
+
+'''
 
 
 
