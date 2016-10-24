@@ -1,6 +1,3 @@
-'''
-Build a tweet sentiment analyzer
-'''
 
 from __future__ import print_function
 import six.moves.cPickle as pickle
@@ -28,16 +25,11 @@ Public Variables and Functions
 ####################################################################################
 """
 
-datasets = {'tweetText_tupleScores': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
+# datasets = {'tweetText_tupleScores': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
 
 # Set the random number generators' seeds for consistency
 SEED = 123
 numpy.random.seed(SEED)
-
-# ff: Feed Forward (normal neural net), only useful to put after lstm
-#     before the classifier.
-# layers = {'lstm': (param_init_lstm, lstm_layer)}
-
 
 """
 ####################################################################################
@@ -47,10 +39,17 @@ Auxiliary Functions
 ####################################################################################
 """
 
-
 def numpy_floatX(data):
+	'''
+	return data in np.array format, dtype as theano float32
+	'''
 	return numpy.asarray(data, dtype=config.floatX)
 
+def _p(pp, name):
+	'''
+	giving parameter names, as theano variablename etc. 
+	'''
+	return '%s_%s' % (pp, name)
 
 def get_minibatches_idx(n, minibatch_size, shuffle=False):
 	"""
@@ -74,36 +73,63 @@ def get_minibatches_idx(n, minibatch_size, shuffle=False):
 
 	return zip(range(len(minibatches)), minibatches)
 
-# call functions from LSTM_tuple_DataPrep
+# call functions from LSTM_DataPrep
 # returns 2 functions
 def get_dataset(name):
 	'''
 	returns 2 functions
-	datasets is public variable
-	datasets = {'tweetText_tupleScores': (LSTM_tuple_DataPrep.load_data, LSTM_tuple_DataPrep.prepare_data)}
+	datasets = {'tweetText_tupleScores': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
 	'''
-	return datasets[name][0], datasets[name][1]
+	# return datasets[name][0], datasets[name][1]
+	return LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data
 
+def dropout_layer(state_before, use_noise, trng):
+	'''
+	state_before: numerical average of hidden values alone each sentences
+	use_noise: use_noise = theano.shared(numpy_floatX(0.))
+			   This shared value will be modified during training!
+	trng: random number generator; trng = RandomStreams(SEED)
+	'''
+	proj = tensor.switch(use_noise,
+						 (state_before *
+						  trng.binomial(state_before.shape,
+										p=0.5, n=1,
+										dtype=state_before.dtype)
+						 ),
+						 state_before * 0.5)
+	return proj
+
+"""
+####################################################################################
+
+Model Parameter Operations
+
+####################################################################################
+"""
 
 def zipp(params, tparams):
-	"""
+	'''
 	When we reload the model. Needed for the GPU stuff.
-	"""
+	tparams is the parameter set used by model
+	'''
 	for kk, vv in params.items():
 		tparams[kk].set_value(vv)
 
-
 def unzip(zipped):
-	"""
+	'''
 	When we pickle the model. Needed for the GPU stuff.
-	"""
+	return a new parameter set, values loaded from zipped
+	'''
 	new_params = OrderedDict()
 	for kk, vv in zipped.items():
 		new_params[kk] = vv.get_value()
 	return new_params
 
-
 def load_params(path, params):
+	'''
+	np.load(): Load arrays or pickled objects from .npy, .npz or pickled files.
+	return parameter set, loaded from .npz or pickled files at path
+	'''
 	pp = numpy.load(path)
 	for kk, vv in params.items():
 		if kk not in pp:
@@ -112,38 +138,27 @@ def load_params(path, params):
 
 	return params
 
-
 def init_tparams(params):
+	'''
+	initialize and return theano parameters, loaded from params
+	---
+	params: coming from init_params()
+	---
+	returns:
+	---
+	tparams is OrderedDict() with elements as theano.shared()
+	tparams is fed into build_model() then lstm_layer()
+	'''
 	tparams = OrderedDict()
 	for kk, pp in params.items():
 		tparams[kk] = theano.shared(params[kk], name=kk)
 	return tparams
 
-
-def dropout_layer(state_before, use_noise, trng):
-	proj = tensor.switch(use_noise,
-						 (state_before *
-						  trng.binomial(state_before.shape,
-										p=0.5, n=1,
-										dtype=state_before.dtype)),
-						 state_before * 0.5)
-	return proj
-
-
-def _p(pp, name):
-	'''
-	giving parameter names, as theano variablename etc. 
-	'''
-	return '%s_%s' % (pp, name)
-
-'''
-####################################################################################
-'''
-
 def init_params(options):
 	"""
 	Global (not LSTM) parameter. For the embeding and the classifier.
 	parameters initialized as numpy.arrays
+	in def train_lstm():, parameters return by init_params() is fed into init_tparams()
 	"""
 	params = OrderedDict()
 	# embedding
@@ -155,26 +170,22 @@ def init_params(options):
 											  params,
 											  prefix=options['encoder'])
 	# classifier
+	# from def train_lstm():
+	# ydim = numpy.max(train[1]) + 1
+	# model_options['ydim'] = ydim
+	# train[1] gives the 2nd value in the tuple: train_set_y, which is a list of Y values
+	# Y values should always >= 0, since it is used for indexing
 	params['U'] = 0.01 * numpy.random.randn(options['dim_proj'],
 											options['ydim']).astype(config.floatX)
 	params['b'] = numpy.zeros((options['ydim'],)).astype(config.floatX)
 
 	return params
 
-'''
-####################################################################################
-'''
-
-# layers is a Universal Variable
 # layers = {'lstm': (param_init_lstm, lstm_layer)}
 # the values in this dict is functions
 def get_layer(name):
 	fns = layers[name]
 	return fns
-
-'''
-####################################################################################
-'''
 
 def ortho_weight(ndim):
 	W = numpy.random.randn(ndim, ndim) 
@@ -205,7 +216,6 @@ def param_init_lstm(options, params, prefix='lstm'):
 
 	return params
 
-
 """
 ####################################################################################
 
@@ -214,26 +224,31 @@ LSTM Functions
 ####################################################################################
 """
 
-
 def lstm_layer(tparams, state_below, options, prefix='lstm', mask=None):
 	"""
 	LSTM layer function
 	performs calculations on the layer, per step-wise
 
-	tparams: temperary parameter set
+	tparams: theano parameter set
+			 OrderedDict() with elements as theano.shared()
 	state_below: from emb matrix
 	options: hyper parameters; dict format; dict of all model hyper parameters
 	prefix: 
 	mask: theano tensor variable; Sequence mask; from imdb.prepare_data
+		  mask marked the length of each sentence on the X matrix
+	
+	returns
+	----
+	perform one iteration through X matrix, returns a list of hidden value generated
 	"""
 	nsteps = state_below.shape[0]
 	if state_below.ndim == 3:
 		n_samples = state_below.shape[1]
 	else:
 		n_samples = 1
-
+	# important for representing sentences of different length loaded into X matrix
 	assert mask is not None
-
+	# slice the concatenated W matrix
 	def _slice(_x, n, dim):
 		'''
 		minibatch creator
@@ -243,7 +258,7 @@ def lstm_layer(tparams, state_below, options, prefix='lstm', mask=None):
 		if _x.ndim == 3:
 			return _x[:, :, n * dim:(n + 1) * dim]
 		return _x[:, n * dim:(n + 1) * dim]
-
+	# one step of the LSTM operation
 	def _step(m_, x_, h_, c_):
 		'''
 		m_: mask
@@ -253,28 +268,27 @@ def lstm_layer(tparams, state_below, options, prefix='lstm', mask=None):
 		'''
 		preact = tensor.dot(h_, tparams[_p(prefix, 'U')])
 		preact += x_
-
+		# i, f, o, c are all concantinated together
 		i = tensor.nnet.sigmoid(_slice(preact, 0, options['dim_proj']))
 		f = tensor.nnet.sigmoid(_slice(preact, 1, options['dim_proj']))
 		o = tensor.nnet.sigmoid(_slice(preact, 2, options['dim_proj']))
 		c = tensor.tanh(_slice(preact, 3, options['dim_proj']))
-
+		# c as the state of LSTM cell
 		c = f * c_ + i * c
 		# using mask to get rid of 'out of sentence' values
-		# i, f, o, c are all concantinated together
-		# thus has one additional dimension for concatination
+		# m_[:, None] here None adds one more dimension to mask matrix
 		c = m_[:, None] * c + (1. - m_)[:, None] * c_
-
+		# h as hidden value
 		h = o * tensor.tanh(c)
 		h = m_[:, None] * h + (1. - m_)[:, None] * h_
 
 		return h, c
-
 	# W*Xt + b
 	state_below = (tensor.dot(state_below, tparams[_p(prefix, 'W')]) +
 				   tparams[_p(prefix, 'b')])
+	# theano.scan() go through sequences=[mask, state_below]
+	# performing one iteration through the data
 	dim_proj = options['dim_proj']
-
 	rval, updates = theano.scan(_step,
 								sequences=[mask, state_below],
 								outputs_info=[tensor.alloc(numpy_floatX(0.),
@@ -285,13 +299,20 @@ def lstm_layer(tparams, state_below, options, prefix='lstm', mask=None):
 														   dim_proj)],
 								name=_p(prefix, '_layers'),
 								n_steps=nsteps)
+	# rval is h, c; rval[0] is a list of h
 	return rval[0]
 
-
+'''
+####################################################################################
+'''
 # ff: Feed Forward (normal neural net), only useful to put after lstm
 #     before the classifier.
 layers = {'lstm': (param_init_lstm, lstm_layer)}
 
+'''
+####################################################################################
+'''
+# cost reduce algorithms
 
 def sgd(lr, tparams, grads, x, mask, y, cost):
 	""" Stochastic Gradient Descent
@@ -319,7 +340,6 @@ def sgd(lr, tparams, grads, x, mask, y, cost):
 							   name='sgd_f_update')
 
 	return f_grad_shared, f_update
-
 
 def adadelta(lr, tparams, grads, x, mask, y, cost):
 	"""
@@ -382,7 +402,6 @@ def adadelta(lr, tparams, grads, x, mask, y, cost):
 
 	return f_grad_shared, f_update
 
-
 def rmsprop(lr, tparams, grads, x, mask, y, cost):
 	"""
 	A variant of  SGD that scales the step size by running average of the
@@ -440,6 +459,9 @@ def rmsprop(lr, tparams, grads, x, mask, y, cost):
 
 	return f_grad_shared, f_update
 
+'''
+####################################################################################
+'''
 
 def build_model(tparams, options):
 	"""
@@ -447,46 +469,45 @@ def build_model(tparams, options):
 
 	Parameters
 	----------
-	tparams: 
-	options: 
+	tparams: theano.shared() variable dict
+	options: dict() of parameters
 	"""
+	# SEED, universal variable
 	trng = RandomStreams(SEED)
-
-	# Used for dropout.
+	# Used for dropout. This shared value will be modified during training!
 	use_noise = theano.shared(numpy_floatX(0.))
-
+	# theano variable
 	x = tensor.matrix('x', dtype='int64')
 	mask = tensor.matrix('mask', dtype=config.floatX)
 	y = tensor.vector('y', dtype='int64')
-
-	# 
+	# theano varialbe based on variable X; columns of X are sentences
 	n_timesteps = x.shape[0]
 	n_samples = x.shape[1]
-
 	# 
 	emb = tparams['Wemb'][x.flatten()].reshape([n_timesteps,
 												n_samples,
 												options['dim_proj']])
-	
 	# layers = {'lstm': (param_init_lstm, lstm_layer)}
 	# proj calls a LSTM 'layer' functions
-	# which calculates the hidden state value and cell state value of a single layer operation
-	# which returns only the hidden value
+	# which calculates the hidden state value and cell state value through one iteration on X matrix
+	# which returns only the hidden values
 	proj = get_layer(options['encoder'])[1](tparams, emb, options,
 											prefix=options['encoder'],
 											mask=mask)
-	
 	# using mask[:,:,None] to get rid of extra 'out of sentence' hidden values
 	if options['encoder'] == 'lstm':
+		# sum of hidden values alone each sentences
 		proj = (proj * mask[:, :, None]).sum(axis=0) # element-wise operation
+		# numerical average of hidden values alone each sentences
 		proj = proj / mask.sum(axis=0)[:, None]
-	
-	# 
+	# if not use dropout_layer() slightly faster, but worse test error. 
 	if options['use_dropout']:
 		proj = dropout_layer(proj, use_noise, trng)
-
 	# calculate results/predictions from outputted hidden layer values
-	pred = tensor.nnet.softmax(tensor.dot(proj, tparams['U']) + tparams['b'])
+	# softmax in the range of [0,1]
+	# pred is a matrix, its axis=1 dimension is by ydim = numpy.max(train[1]) + 1
+	# e.g., if y is on 0 or 1, then ydim = max(0,1) + 1 = 2
+	pred = tensor.nnet.softmax( tensor.dot(proj, tparams['U']) + tparams['b'] )
 
 	f_pred_prob = theano.function([x, mask], pred, name='f_pred_prob')
 	f_pred = theano.function([x, mask], pred.argmax(axis=1), name='f_pred')
@@ -496,15 +517,28 @@ def build_model(tparams, options):
 		off = 1e-6
 
 	# negtive log likelihood
-	cost = -tensor.log(pred[tensor.arange(n_samples), y] + off).mean()
+	# [tensor.arange(n_samples), y], this way of indexing means 
+	# y's value should always be >= 0 
+	cost = -tensor.log( pred[ tensor.arange(n_samples), y ] + off ).mean()
 
 	return use_noise, x, mask, y, f_pred_prob, f_pred, cost
 
+'''
+####################################################################################
+'''
 
 def pred_probs(f_pred_prob, prepare_data, data, iterator, verbose=False):
 	""" 
 	If you want to use a trained model, this is useful to compute
 	the probabilities of new examples.
+
+	parameters:
+	---
+	f_pred_prob:
+	prepare_data:
+	data:
+	iterator:
+
 	"""
 	n_samples = len(data[0])
 	probs = numpy.zeros((n_samples, 2)).astype(config.floatX)
@@ -524,12 +558,17 @@ def pred_probs(f_pred_prob, prepare_data, data, iterator, verbose=False):
 
 	return probs
 
-
 def pred_error(f_pred, prepare_data, data, iterator, verbose=False):
 	"""
 	Just compute the error
-	f_pred: Theano fct computing the prediction
-	prepare_data: usual prepare_data for that dataset. IS a function
+
+	parameters:
+	---
+	f_pred: Theano function computing the prediction
+	prepare_data: prepare_data for that dataset. IS a function
+	data:
+	iterator:
+
 	"""
 	valid_err = 0
 	for _, valid_index in iterator:
@@ -543,7 +582,6 @@ def pred_error(f_pred, prepare_data, data, iterator, verbose=False):
 
 	return valid_err
 
-
 """
 ####################################################################################
 
@@ -552,15 +590,18 @@ Main Function
 ####################################################################################
 """
 
-
 def train_lstm(
-	dim_proj=256,  # word embeding dimension and LSTM number of hidden units.
+	dim_proj=256,  
+	# word embeding dimension and LSTM number of hidden units.
+	
 	patience=10,  # Number of epoch to wait before early stop if no progress
 	max_epochs=5000,  # The maximum number of epoch to run
 	dispFreq=10,  # Display to stdout the training progress every N updates
 	decay_c=0.,  # Weight decay for the classifier applied to the U weights.
 	lrate=0.0001,  # Learning rate for sgd (not used for adadelta and rmsprop)
-	n_words=1000,  # Vocabulary size
+	
+	n_words=1000,  
+	# Vocabulary size
 
 	optimizer=adadelta,  
 	# sgd, adadelta and rmsprop available, 
@@ -568,19 +609,30 @@ def train_lstm(
 	# optimizer's value is a function
 
 	encoder='lstm',  # TODO: can be removed must be lstm.
-	saveto='lstm_model.npz',  # The best model will be saved there
+	
+	saveto='lstm_model.npz',  
+	# The best model will be saved there
+	loadfrom = 'lstm_model.npz',
+	# load parameters from .npz files
+	
 	validFreq=370,  # Compute the validation error after this number of update.
 	saveFreq=1110,  # Save the parameters after every saveFreq updates
 	maxlen=100,  # Sequence longer then this get ignored
 	batch_size=16,  # The batch size during training.
 	valid_batch_size=64,  # The batch size used for validation/test set.
-	dataset='tweetText_tupleScores',
+	
+	dataset='tweetText_tagScore.pkl',
+	# name of the data set; also name of the .pkl file
+	# datasets = {'Name?': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
+	dataset_path="Data/DataSet_Tokenize",
+	# path to the data set
 
 	# Parameter for extra option
 	noise_std=0.,
 	use_dropout=True,  # if False slightly faster, but worse test error
 					   # This frequently need a bigger model.
-	reload_model=None,  # Path to a saved model we want to start from.
+	reload_model=None,  
+	# Path to a saved model we want to start from.
 	test_size=-1,  # If >0, we keep only this number of test example.
 ):
 
@@ -588,27 +640,27 @@ def train_lstm(
 	# this will get all the varialbe:value from def train_lstm into a dict
 	model_options = locals().copy()
 	print("model options", model_options)
-
-
+	# get data from dataset named as 'dataset'
+	# datasets = {'tweetText_tupleScores': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
 	load_data, prepare_data = get_dataset(dataset)
-
 	print('Loading data')
-	train, valid, test = load_data(n_words=n_words, valid_portion=0.05,
-								   maxlen=maxlen)
+	# LSTM_DataPrep.load_data(dataset, path_dataset, n_words=60000, valid_portion=0.1, maxlen=None, 
+	# 						  sort_by_len=True)	
+	train, valid, test = load_data(dataset=dataset, path_dataset=dataset_path, 
+								   n_words=n_words, valid_portion=0.05, maxlen=maxlen)
+	# adjust the size of test_set used
 	if test_size > 0:
-		# The test set is sorted by size, but we want to keep random
-		# size example.  So we must select a random selection of the
-		# examples.
+		# The test set is sorted by size, but we want to keep random size example.  
+		# So we must select a random selection of the examples.
 		idx = numpy.arange(len(test[0]))
 		numpy.random.shuffle(idx)
 		idx = idx[:test_size]
 		test = ([test[0][n] for n in idx], [test[1][n] for n in idx])
-
-
+	# train[1] gives the 2nd value in the tuple: train_set_y, which is a list of Y values
+	# e.g. ydim = max(0,1)+1 = 2
 	ydim = numpy.max(train[1]) + 1
 	model_options['ydim'] = ydim
 
-	
 	##################
 	# Building Model #
 	##################
@@ -616,16 +668,16 @@ def train_lstm(
 	# This create the initial parameters as numpy ndarrays.
 	# Dict name (string) -> numpy ndarray
 	params = init_params(model_options)
-
+	# loading previous parameters or not
 	if reload_model:
-		load_params('lstm_model.npz', params)
-
+		# path = name.npz, in the save address as this code
+		load_params(path=loadfrom, params=params)
 	# This create Theano Shared Variable from the parameters.
 	# Dict name (string) -> Theano Tensor Shared Variable
 	# params and tparams have different copy of the weights.
 	tparams = init_tparams(params)
-
-	# use_noise is for dropout
+	
+	# build_model()
 	(use_noise, x, mask,
 	 y, f_pred_prob, f_pred, cost) = build_model(tparams, model_options)
 
@@ -637,6 +689,7 @@ def train_lstm(
 		weight_decay *= decay_c
 		cost += weight_decay
 
+	# cost, grads, lr and grad_updates
 	f_cost = theano.function([x, mask, y], cost, name='f_cost')
 
 	grads = tensor.grad(cost, wrt=list(tparams.values()))
@@ -645,15 +698,12 @@ def train_lstm(
 	lr = tensor.scalar(name='lr')
 	# sgd, adadelta and rmsprop available
 	# cost is a theano variable/function created at build_model(tparams, model_options)
-	f_grad_shared, f_update = optimizer(lr, tparams, grads,
-										x, mask, y, cost)
-
+	f_grad_shared, f_update = optimizer(lr, tparams, grads, x, mask, y, cost)
 
 	##################
 	# Training Model #
 	##################
 	print('Optimization')
-
 	# kf_... is a list of the indexes of samples per each minibatch of all minibatches
 	kf_valid = get_minibatches_idx(len(valid[0]), valid_batch_size)
 	kf_test = get_minibatches_idx(len(test[0]), valid_batch_size)
@@ -677,30 +727,29 @@ def train_lstm(
 	try:
 		for eidx in range(max_epochs):
 			n_samples = 0
-
 			# Get new shuffled index for the training set.
 			# kf_... is a list of the indexes of samples per each minibatch of all minibatches
 			kf = get_minibatches_idx(len(train[0]), batch_size, shuffle=True)
 
 			for _, train_index in kf:
 				uidx += 1
+				# set use_noise for dropout_layer()
 				use_noise.set_value(1.)
-
 				# Select the random examples for this minibatch
 				y = [train[1][t] for t in train_index]
 				x = [train[0][t]for t in train_index]
-
 				# Get the data in numpy.ndarray format
 				# This swap the axis!
 				# Return something of shape (minibatch maxlen, n samples)
+				# LSTM_DataPrep.prepare_data(seqs, labels, maxlen=None)
 				x, mask, y = prepare_data(x, y)
 				n_samples += x.shape[1]
-
+				
 				# cost is a theano variable/function created at build_model(tparams, model_options)
 				# here cost is calculated using the selected gradiant method
 				cost = f_grad_shared(x, mask, y)
 				f_update(lrate)
-
+				# check cost for nan and inf
 				if numpy.isnan(cost) or numpy.isinf(cost):
 					print('bad cost detected: ', cost)
 					return 1., 1., 1.
@@ -708,11 +757,9 @@ def train_lstm(
 				# display
 				if numpy.mod(uidx, dispFreq) == 0:
 					print('Epoch ', eidx, 'Update ', uidx, 'Cost ', cost)
-
 				# save parameters
 				if saveto and numpy.mod(uidx, saveFreq) == 0:
 					print('Saving...')
-
 					if best_p is not None:
 						params = best_p
 					else:
@@ -738,8 +785,7 @@ def train_lstm(
 						best_p = unzip(tparams)
 						bad_counter = 0
 
-					print( ('Train ', train_err, 'Valid ', valid_err,
-						   'Test ', test_err) )
+					print( ('Train ', train_err, 'Valid ', valid_err, 'Test ', test_err) )
 
 					if (len(history_errs) > patience and
 						valid_err >= numpy.array(history_errs)[:-patience,
@@ -781,6 +827,13 @@ def train_lstm(
 			(end_time - start_time)), file=sys.stderr)
 	return train_err, valid_err, test_err
 
+"""
+####################################################################################
+
+Load Parameter and Prediction Codes
+
+####################################################################################
+"""
 
 """
 ####################################################################################
@@ -795,100 +848,34 @@ if __name__ == '__main__':
 	# See function train for all possible parameter and there definition.
 	train_lstm(
 		max_epochs=100,
-		test_size=500,
+		test_size=-1, 
+		# If >0, we keep only this number of test example.
+		
+		dim_proj=256, # word embeding dimension and LSTM number of hidden units.
+		n_words=1000, # Vocabulary size
+		
+		dataset='tweetText_tagScore.pkl',
+		# name of the data set, 'sth.pkl'; also name of the .pkl file
+		# datasets = {'Name?': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
+		dataset_path="Data/DataSet_Tokenize",
+		# path to the data set
+
+		saveto='lstm_model.npz',
+		loadfrom = 'lstm_model.npz',
+		reload_model=None # whether reload revious parameter or not
+
 	)
 
-'''
-####################################################################################
-Notes on parameter selections:
-
-hidden_unites: 128
-n_words: 2500
-('Train ', 0.10521091811414396, 'Valid ', 0.30188679245283023, 'Test ', 0.30223123732251522)
-
-hidden_unites: 512
-n_words: 2500
-('Train ', 0.10521091811414396, 'Valid ', 0.24528301886792447, 'Test ', 0.27789046653144012)
-
-hidden_unites: 256
-n_words: 4000
-('Train ', 0.10521091811414396, 'Valid ', 0.26415094339622647, 'Test ', 0.30020283975659234)
-
-hidden_unites: 256
-n_words: 1000
-('Train ', 0.10521091811414396, 'Valid ', 0.160377358490566, 'Test ', 0.23529411764705888)
-
-
-
-
-####################################################################################
-Using gpu device 0: GeForce 930M (CNMeM is disabled, cuDNN 5005)
-
-hidden_unites: 128
-n_words: 2500 
-
-Loading data
-Building model
-
-Optimization
-2015 train examples
-106 valid examples
-493 test examples
-
-Epoch  64 Update  8140 Cost  0.000235730985878
-('Train ', 0.10521091811414396, 'Valid ', 0.30188679245283023, 'Test ', 0.30223123732251522)
-Early Stop!
-Seen 1216 samples
-Train  0.106203473945 Valid  0.198113207547 Test  0.247464503043
-The code run for 65 epochs, with 4.130815 sec/epochsTraining took 268.5s
-
-####################################################################################
-Using gpu device 0: GeForce 930M (CNMeM is disabled, cuDNN 5005)
-
-hidden_unites: 512
-n_words: 2500
-
-Loading data
-Building model
-
-Optimization
-2015 train examples
-106 valid examples
-493 test examples
-
-('Train ', 0.10521091811414396, 'Valid ', 0.24528301886792447, 'Test ', 0.27789046653144012)
-
-####################################################################################
-Using gpu device 0: GeForce 930M (CNMeM is disabled, cuDNN 5005)
-
-hidden_unites: 256
-n_words: 4000
-
-Epoch  14 Update  1850 Cost  0.00331142777577
-('Train ', 0.10570719602977663, 'Valid ', 0.21698113207547165, 'Test ', 0.27383367139959436)
-Epoch  14 Update  1860 Cost  0.00306131341495
-
-Epoch  20 Update  2590 Cost  0.00529151270166
-('Train ', 0.10620347394540941, 'Valid ', 0.23584905660377353, 'Test ', 0.29817444219066935)
-Epoch  20 Update  2600 Cost  0.000666422769427
-
-Epoch  23 Update  2960 Cost  0.000971935631242
-('Train ', 0.10521091811414396, 'Valid ', 0.26415094339622647, 'Test ', 0.30020283975659234)
-Epoch  23 Update  2970 Cost  0.000293596705887
-
-####################################################################################
-Using gpu device 0: GeForce 930M (CNMeM is disabled, cuDNN 5005)
-
-hidden_unites: 256
-n_words: 1000
-
-Epoch  29 Update  3700 Cost  0.00859288871288
-('Train ', 0.10521091811414396, 'Valid ', 0.160377358490566, 'Test ', 0.23529411764705888)
-Epoch  29 Update  3710 Cost  0.0138982776552
 
 
 
 
 
 
-'''
+
+
+
+
+
+
+

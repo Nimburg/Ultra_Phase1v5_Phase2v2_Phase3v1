@@ -18,31 +18,63 @@ from DataSet_Pickle import DataSet_Pickle_Main
 ####################################################################
 '''
 
-def Tokenize_Main(path_preToken_DataSet, path_tokenizer):
+def Tokenize_Main(dict_parameters):
 
 	# get current address
 	currdir = os.getcwd()
 	print 'currdir: ', currdir
 
+	# path_preToken_DataSet = '../Data/DataSet_Tokenize/'
+	path_preToken_DataSet = dict_parameters['dataset_path']
 	path_preToken_DataSet = os.path.join(currdir, path_preToken_DataSet)
 	print "path_preToken_DataSet: \n", path_preToken_DataSet
 
+	# path_tokenizer = './scripts/tokenizer/'
+	path_tokenizer = dict_parameters['tokenizer_path']
 	path_tokenizer = os.path.join(currdir, path_tokenizer)
 	print "path_tokenizer: \n", path_tokenizer
 
-	DataSet_Pickle_Main(DataSet_preToken_Path=path_preToken_DataSet,
+	# Data Pickle Operation
+	N_uniqueWords = DataSet_Pickle_Main(dict_parameters=dict_parameters,
+						DataSet_preToken_Path=path_preToken_DataSet,
 						path_tokenizer=path_tokenizer)
+
+	# return to currdir
+	os.chdir(currdir)
+
+	return N_uniqueWords
 
 """
 ########################################################################################
 """
 
 if __name__ == '__main__':
-	
-	path_preToken_DataSet = '../Data/DataSet_Tokenize/'
-	path_tokenizer = './scripts/tokenizer/'
 
-	Tokenize_Main(path_preToken_DataSet=path_preToken_DataSet, path_tokenizer=path_tokenizer)
+	dict_tokenizeParameters_trainAgainst_trump = {
+		'dataset':'trainAgainst_trump', 
+		# PLUS .pkl or dict.pkl for LSTM
+		'dataset_path': '../Data/DataSet_Tokenize/',
+		'tokenizer_path': './scripts/tokenizer/',
+		# same for all cases
+		'lstm_saveto': 'lstm_model_trainAgainst_trump.npz',
+		'lstm_loadfrom':'lstm_model_trainAgainst_trump.npz',
+		# LSTM model parameter save/load
+		'Yvalue_list':['posi_trump', 'neg_trump'],
+		# root name for cases to be considered
+		'posi_trump_folder':['posi_neut', 'posi_neg'],
+		'neg_trump_folder':['neg_posi', 'neg_neut', 'neg_neg'],
+		'posi_trump_score':1,
+		'neg_trump_score':0
+		}
+
+	Tokenize_Main(dict_parameters = dict_tokenizeParameters_trainAgainst_trump)
+
+
+
+
+
+
+
 
 '''
 Number of sentences before tokenize: 2121
