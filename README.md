@@ -20,8 +20,12 @@ The PHase1v5 is the 5th re-write of Phase1. Since we have the 2016 election as o
 
 The Phase2 of this project is devoted to sentiment analysis. 
 
-During my previous attempts on this subject, I realized that purely statistical variables, though abundent, is not very effective when it comes to figuring out individual's opinion, nor when it comes to classify what kinds of information specific individuals are receiving. 
+During my previous attempts on this subject, I realized that purely statistical variables, though abundent, is not very effective when it comes to figuring out individual's opinion, nor when it comes to classify what kinds of information specific individuals are receiving. In short, sentiment analysis of tweet text message is absolutely necessary for achieveing the objective. 
 
+The sentiment analysis in Phase2v2 (2nd re-write of Phase2) is performed using the LSTM (Long Short Time Memory) method, written with Theano. Programing implimentation wise, this is not particularly challenging. However, what is challenging is how one generate the corpus to train the LSTM network. 
+
+Usually, the "golden standard" corpus when it comes to training a NLP application is a corpus that is manually marked by human beings. Naturally, I personally don't have time to marked hundreds of thousands of tweets. But the good news is that, since we are studying tweets messages, they all comes with one or more hash tags. Thus, I could marked the most frequently used hashtags, and use these hashtags to mark the opinions expressed by the tweet messages. Nonetheless, there are still several challenges related to generate a corpus for training. 
+1st, of those highly used hash tags, some are neutral, like "trump2016" or "hillary2016". These 
 
 
 
