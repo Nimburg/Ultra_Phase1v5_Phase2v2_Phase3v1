@@ -16,6 +16,14 @@ In order to achieved such objective, one has to download and analyze huge amount
 
 The Phase1 of this project is devoted to data cleaning and extract basic relevent information from this huge data set. 
 
+The PHase1v5 is the 5th re-write of Phase1. Since we have the 2016 election as our focus point, thus only a small part of the raw data set are relevent to our purposes. In order to extract these relevent data, I used a dynamic method for data cleaning. The basic idea is that, during the process of one scaning through the data set, one will build up a dictionary for hash tags, keywords and individuals that spend more than average of their tweets on topics related to the 2016 elections. And we are using this dictionary to filter out relevent information. 
+
+The Phase2 of this project is devoted to sentiment analysis. 
+
+During my previous attempts on this subject, I realized that purely statistical variables, though abundent, is not very effective when it comes to figuring out individual's opinion, nor when it comes to classify what kinds of information specific individuals are receiving. 
+
+
+
 
 
 
