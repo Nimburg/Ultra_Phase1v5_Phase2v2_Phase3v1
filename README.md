@@ -25,10 +25,18 @@ During my previous attempts on this subject, I realized that purely statistical 
 The sentiment analysis in Phase2v2 (2nd re-write of Phase2) is performed using the LSTM (Long Short Time Memory) method, written with Theano. Programing implimentation wise, this is not particularly challenging. However, what is challenging is how one generate the corpus to train the LSTM network. 
 
 Usually, the "golden standard" corpus when it comes to training a NLP application is a corpus that is manually marked by human beings. Naturally, I personally don't have time to marked hundreds of thousands of tweets. But the good news is that, since we are studying tweets messages, they all comes with one or more hash tags. Thus, I could marked the most frequently used hashtags, and use these hashtags to mark the opinions expressed by the tweet messages. Nonetheless, there are still several challenges related to generate a corpus for training. 
+
 1st, of those highly used hash tags, some are neutral, like "trump2016" or "hillary2016". These 
 
 
 
 
+-----------------------------------------------------------------------------
+Technical Details
 
+This set of codes are written in Python 2.7, using libraries that includes: theano, pymysql, pandas and other routine libs like numpy
+
+Phase1v5 and Phase2v2 both demands MySQL as the way of managing huge data sets. 
+
+The tokenization scripts are borrowed from 
 
