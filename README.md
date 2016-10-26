@@ -26,17 +26,27 @@ The sentiment analysis in Phase2v2 (2nd re-write of Phase2) is performed using t
 
 Usually, the "golden standard" corpus when it comes to training a NLP application is a corpus that is manually marked by human beings. Naturally, I personally don't have time to marked hundreds of thousands of tweets. But the good news is that, since we are studying tweets messages, they all comes with one or more hash tags. Thus, I could marked the most frequently used hashtags, and use these hashtags to mark the opinions expressed by the tweet messages. Nonetheless, there are still several challenges related to generate a corpus for training. 
 
-1st, of those highly used hash tags, some are neutral, like "trump2016" or "hillary2016". These 
+1st, of those highly used hash tags, some are neutral, like "trump2016" or "hillary2016". These hash tags are not necessarily used to express support or dislike. Thus one could not use them to mark tweet messages. 
 
+2nd, among hash tags that are clearly biased towards certain sentiments, like "vote4XXXX" or "XXXXislier", those hash tags that expresses dislike are much more frequently used than those expresses supported. As a results, the corpus one could get using this method are heavily biased towards the "dislike" sentiment. For both candidates (trump and hillary), the number of tweets expressing dislike is easily ten times larger than that of support. 
 
+-----------------------------------------------------------------------------
+The Way Forward
 
+This deposite will be routinely updated for the next one month or so (until I hit a dead end). 
+
+What I intend to do next, is dynamically expand the set of hash tags that I could use for marking tweet messages. 
+
+Also, I will try a "boost with different LSTM as contributing elements". 
 
 -----------------------------------------------------------------------------
 Technical Details
 
-This set of codes are written in Python 2.7, using libraries that includes: theano, pymysql, pandas and other routine libs like numpy
+This set of codes are written in Python 2.7, using libraries that includes: theano, pymysq and other routine libs like numpy and pandas.
 
 Phase1v5 and Phase2v2 both demands MySQL as the way of managing huge data sets. 
 
-The tokenization scripts are borrowed from 
+The tokenization scripts are borrowed from https://github.com/moses-smt/mosesdecoder/raw/master/scripts/tokenizer/tokenizer.perl. Credits to Josh Schroeder. 
+
+The LSTM training and predictions codes are adapted from the tutorial codes at http://deeplearning.net/tutorial/contents.html. I adapted the training codes so that it would work on my data sets; I added prediction codes so that it would work with other parts of my Phase2v2. 
 
