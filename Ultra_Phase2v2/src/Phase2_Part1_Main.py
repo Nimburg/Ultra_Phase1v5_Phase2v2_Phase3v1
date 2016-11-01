@@ -1,7 +1,25 @@
 
 ####################################################################
 # 
-# 3. import the marked tags 
+# Phase2_Part1 Design
+# 
+# 1. marking tags
+# extract key_tags and relev_tags of both keywords
+# 
+# apply filters to text message:
+# mentioned_users, https, ratio of non_tag_words and tag_words, number of non_tag_words
+# create a filtered_tweet_stack
+# use filtered_tweet_stack to try to flag those most frequently called tags
+# 
+# 
+# filtered_tweet_stack should:
+# use numerical Primary Key 
+# has: tweetID, tweetTime, userID, tweet_text, taglist_text
+# score1&2_by_tags, score1&2_by different LSTM models
+# 
+# 
+# 
+# 2. import the marked tags 
 # and use the marked tags to export tweet text as training/testing data sets
 # separating into groups of: key1 is trump, key2 is hillary
 # 
@@ -9,47 +27,39 @@
 # neut_posi, neut_neut, neut_neg
 # neg_posi, neg_neut, neg_neg
 # 
-# thus each tweet text has its senti-value of (x,y) with x&y -1, 0 or 1
+# extract tweets into 9 folders.... as text file with tweetID as file name
+# Functions in MarkedTag_Import.py would create all those 9 folders
+# 
+# apply filters to text message:
+# mentioned_users, https, ratio of non_tag_words and tag_words, number of non_tag_words
+# 
+# Note: 
+# 
+# neut_neut has the largest number, in 10K order
+# neg_neut and neut_neg are in order of several K
+# anything with posi is in order of hundreds
 # 
 ####################################################################
-'''
-The LSTM could not easily handle a complex variable situation 
-(with real and imaginery parts representing scores for keyword 1 and 2)
-
-It is not practical either to add one more dimension directly, 
-making W, U etc into theano tensor3 while b from vector to matrix
-
-Nor is it very helpful to 'flatten' the extra dimension
-putting scores (int, int) into extra columns or rows
-
-
-Thus, the solution adopted here is to:
-
-use +1 representing support for keyword 1 'trump'
-(+1, 0 or -1) #2
-
-use -1 representing support for keyword 2 'hillary'
-(0 or -1, +1) #2 
-
-use 0 for neg_neg cases
-(-1, -1) #1
-
-drop the (0, 0) cases, as too much noise there
-'''
-####################################################################
-'''
-Modified Designs
-
-in TextExtract_byTags(), the following filters are applied on tweetText:
-
-0. extract TagList_text and split by ',', putting into a list, then into a set
-1. split tweetText by ' ', getting each words from a tweetText
-2. eliminate strings starting with '@', those are mentioned users
-3. use the set(list[tags]), to check how many non-tag words is in the tweetText
-   which: not marketScore_tags, not word with keywords inside, not https:
-   important to lower() tweetText
-4. use a threshold to select tweets with more than a certain number of non-tag words
-'''
+# 
+# LSTM training can be separated into 3 groups:
+# 
+# 1st, training against 'trump' only
+# with (posi_neut, posi_neg) score +1
+# with (neg_posi, neg_neut, neg_neg) score 0
+# 
+# 2nd, training against 'hillary' only
+# with (neut_posi, neg_posi) score +1
+# with (posi_neg, neut_neg, neg_neg) score 0
+# 
+# 3rd, training against both keywords
+# with (posi_neut, posi_neg) score +2
+# with (neut_posi, neg_posi) score 0
+# with (neg_neg) score +1
+# 
+# Thus, 3 LSTM networks (parameter set) will be trained !!!
+# 
+# Best training methods demands a balanced corpus !!!
+# 
 ####################################################################
 
 
@@ -150,10 +160,11 @@ Main Function of Phase2_Part1
 ####################################################################
 """
 
-def Pahse2_Part1_Main(file_name_list, MySQL_DBkey, keyword1, keyword2,
-					  path_save, path_tokenizer, ratio_train_test, 
+def Pahse2_Part1_Main(file_name_list, MySQL_DBkey,
+					  path_DataSet_training, path_tokenizer, ratio_train_test, 
 					  size_dataset, thre_nonTagWords,
-					  list_dict_tokenizeParameters):
+					  list_dict_tokenizeParameters, 
+					  flag_trainOrpredict, flag_ridTags, flag_NeutralFiles):
 	'''
 		Phase2 Part1 Main Function
 		tokenization and related
@@ -182,27 +193,27 @@ def Pahse2_Part1_Main(file_name_list, MySQL_DBkey, keyword1, keyword2,
 								 cursorclass=pymysql.cursors.DictCursor)
 
 	####################################################################
+	# This is for EITHER training OR predicting LSTM purposes !!!
 
 	# create MarkedTags_dict from .csv
 	MarkedTags_dict = MarkedTag_Import(file_name_list=file_name_list)
 	# extract all tweets from tweet_stack which contains key_tags
 	# using MarkedTags_dict to create
 	TextExtract_byTags(connection=connection, MarkedTags_dict=MarkedTags_dict, 
-					   path_save=path_save, ratio_train_test=ratio_train_test,
-					   keyword1=keyword1, keyword2=keyword2, size_dataset=size_dataset, 
-					   thre_nonTagWords=thre_nonTagWords)
-
-	####################################################################
-
+					   path_save=path_DataSet_training, flag_trainOrpredict=flag_trainOrpredict, # training LSTM
+					   ratio_train_test=ratio_train_test, size_dataset=size_dataset, 
+					   thre_nonTagWords=thre_nonTagWords, 
+					   flag_ridTags=flag_ridTags, flag_NeutralFiles=flag_NeutralFiles, 
+					   SQL_tableName="training")
+	
 	# tokenization
 	for dict_case in list_dict_tokenizeParameters: 
-		dict_case['N_uniqueWords'] = Tokenize_Main(dict_parameters = dict_case)
+		dict_case['N_uniqueWords'] = Tokenize_Main(dict_parameters = dict_case, 
+												   flag_trainOrpredict=flag_trainOrpredict)
 		print dict_case
 
 	####################################################################
-
-
-
+	return None
 
 
 """
@@ -215,22 +226,6 @@ def Pahse2_Part1_Main(file_name_list, MySQL_DBkey, keyword1, keyword2,
 
 if __name__ == "__main__":
 
-
-	####################################################################
-
-	# ultraoct_p1v5_p2v2 data base
-	# file_name_list = ['US_tweets_Oct15.txt', 'US_tweets_Oct16.txt', 'US_tweets_Oct17.txt']
-	
-
-	# ultratest_p1v5_p2v2 data base
-	# file_name_list = ['US_tweets_Oct15.txt']
-	# file_name_list = ['US_tweets_Oct16.txt']
-	
-
-	# ultrajuly_p1v5_p2v2
-	# file_name_list = ['US_tweets_july13.txt', 'US_tweets_july15.txt', 'US_tweets_july16.txt', 
-	# 					'US_tweets_july17.txt', 'US_tweets_july18.txt', 'US_tweets_july19.txt']
-
 	####################################################################
 
 	# MySQL_DBkey = {'host':'localhost', 'user':'sa', 'password':'fanyu01', 'db':'ultrajuly_p1v5_p2v2','charset':'utf8mb4'}
@@ -240,20 +235,12 @@ if __name__ == "__main__":
 	keyword2 = 'hillary'
 
 	####################################################################
-
-	# tokenizer path variables
-	path_preToken_DataSet = '../Data/DataSet_Tokenize/'
-	path_tokenizer = './scripts/tokenizer/'
-
-	# MarkedTag_Import file_name_list
-	file_name_list = ['MarkedTag_keyword1.csv','MarkedTag_keyword2.csv']
-
-	####################################################################
+	# dict_parameters for training
 
 	dict_tokenizeParameters_trainAgainst_trump = {
 		'dataset':'trainAgainst_trump', 
 		# PLUS .pkl or dict.pkl for LSTM
-		'dataset_path': '../Data/DataSet_Tokenize/',
+		'dataset_path': '../Data/DataSet_Training/',
 		'tokenizer_path': './scripts/tokenizer/',
 		# same for all cases
 		'lstm_saveto': 'lstm_model_trainAgainst_trump.npz',
@@ -271,7 +258,7 @@ if __name__ == "__main__":
 	dict_tokenizeParameters_trainAgainst_hillary = {
 		'dataset':'trainAgainst_hillary', 
 		# PLUS .pkl or dict.pkl for LSTM
-		'dataset_path': '../Data/DataSet_Tokenize/',
+		'dataset_path': '../Data/DataSet_Training/',
 		'tokenizer_path': './scripts/tokenizer/',
 		# same for all cases
 		'lstm_saveto': 'lstm_model_trainAgainst_trump.npz',
@@ -289,7 +276,7 @@ if __name__ == "__main__":
 	dict_tokenizeParameters_trainAgainst_trumphillary = {
 		'dataset':'trainAgainst_trumphillary', 
 		# PLUS .pkl or dict.pkl for LSTM
-		'dataset_path': '../Data/DataSet_Tokenize/',
+		'dataset_path': '../Data/DataSet_Training/',
 		'tokenizer_path': './scripts/tokenizer/',
 		# same for all cases
 		'lstm_saveto': 'lstm_model_trainAgainst_trump.npz',
@@ -306,104 +293,131 @@ if __name__ == "__main__":
 		'neutral_score':1,
 		}
 
-	list_dict_tokenizeParameters = [dict_tokenizeParameters_trainAgainst_trump,
-									dict_tokenizeParameters_trainAgainst_hillary,
-									dict_tokenizeParameters_trainAgainst_trumphillary]
+	####################################################################
+
+	# tokenizer path variables
+	path_preToken_Training = '../Data/DataSet_Training/'
+	path_preToken_Predicting = '../Data/DataSet_Predicting/'
+	
+	path_tokenizer = './scripts/tokenizer/'
+
+	# MarkedTag_Import file_name_list
+	file_name_list = ['MarkedTag_keyword1.csv','MarkedTag_keyword2.csv']
 
 	####################################################################
 
-	Pahse2_Part1_Main(file_name_list=file_name_list, MySQL_DBkey=MySQL_DBkey, 
-					  keyword1=keyword1, keyword2=keyword2, 
-					  path_save=path_preToken_DataSet, path_tokenizer=path_tokenizer,
-					  ratio_train_test=0.8, 
-					  size_dataset=None, # total number of tweets for tokenize
-					  thre_nonTagWords=10, 
-					  # the threshold for number of non-tag words, 
-					  # above which a tweet is selected for tokenize
-					  list_dict_tokenizeParameters=list_dict_tokenizeParameters
-					  # list of dicts 
-					  # each dict contains parameters for tokenization for specific cases
-					  # related to corresponding LSTM training
-					  )
+	flag_training = True 
+	flag_predicting = False
+
+	####################################################################
+	# for training !!!
+	if flag_training == True:
+
+		dict_tokenizeParameters_trainAgainst_trump['dataset_path'] = path_preToken_Training
+		dict_tokenizeParameters_trainAgainst_hillary['dataset_path'] = path_preToken_Training
+		dict_tokenizeParameters_trainAgainst_trumphillary['dataset_path'] = path_preToken_Training
+
+		# load into list_dict_tokenizeParameters
+		list_dict_tokenizeParameters = [dict_tokenizeParameters_trainAgainst_trump,
+										dict_tokenizeParameters_trainAgainst_hillary,
+										dict_tokenizeParameters_trainAgainst_trumphillary]
+
+		Pahse2_Part1_Main(file_name_list=file_name_list, MySQL_DBkey=MySQL_DBkey, 
+						  path_DataSet_training=path_preToken_Training, path_tokenizer=path_tokenizer,
+						  ratio_train_test=0.8, 
+						  size_dataset=None, # total number of tweets for tokenize
+						  thre_nonTagWords=10, 
+						  # the threshold for number of non-tag words, 
+						  # above which a tweet is selected for tokenize
+						  list_dict_tokenizeParameters=list_dict_tokenizeParameters,
+						  # list of dicts 
+						  # each dict contains parameters for tokenization for specific cases
+						  # related to corresponding LSTM training
+						  flag_trainOrpredict=True, # training
+						  flag_ridTags=False , flag_NeutralFiles=True 
+						  )
+	
+	####################################################################
+	# for predicting !!!
+	if flag_predicting == True:
+
+		# setting path for .txt files
+		dict_tokenizeParameters_predicting_['dataset_path'] = path_preToken_Predicting
+
+		# setting correct 9 folders to the class with highest Y-value
+		full_folder_list = ['posi_posi', 'posi_neut', 'posi_neg',
+							'neut_posi', 'neut_neut', 'neut_neg',
+							'neg_posi', 'neg_neut', 'neg_neg']
+		# thus passing the Y-value_max into LSTM
+		# and setting all other folders to [], avoiding overlapping data
+		dict_tokenizeParameters_predicting_['posi_trump_folder'] = full_folder_list
+		dict_tokenizeParameters_predicting_['neg_trump_folder'] = []
+
+		# load into list_dict_tokenizeParameters
+		list_dict_tokenizeParameters = [dict_tokenizeParameters_predicting_]
+
+		Pahse2_Part1_Main(file_name_list=file_name_list, MySQL_DBkey=MySQL_DBkey, 
+						  path_DataSet_training=path_preToken_Predicting, path_tokenizer=path_tokenizer,
+						  ratio_train_test=0.8, 
+						  size_dataset=None, # total number of tweets for tokenize
+						  thre_nonTagWords=10, 
+						  # the threshold for number of non-tag words, 
+						  # above which a tweet is selected for tokenize
+						  list_dict_tokenizeParameters=list_dict_tokenizeParameters,
+						  # list of dicts 
+						  # each dict contains parameters for tokenization for specific cases
+						  # related to corresponding LSTM training
+						  flag_trainOrpredict=False, 
+						  flag_ridTags=True , flag_NeutralFiles=True 
+						  )
+
+
+
+
 
 '''
 ####################################################################
 
-extracting tweets from tweet_stack
-total number of tweets extracted: 177033
-total number of tweets scored and past tweetText filter: 112875
-the ratio of train/test is: 0.800000
+total number of tweets extracted: 11119
+total number of tweets scored and past tweetText filter: 7776
 
-List of Folders involved for dictionary building:  ['posi_neut', 'posi_neg', 'neg_posi', 'neg_neut', 'neg_neg']
-build_dict(data set path):  C:\Users\Nimburg\Desktop\Ultra_Phase1v5_Phase2V2\Ultra_Phase2v2\src\../Data/DataSet_Tokenize/train
-Number of sentences before tokenize: 14588
-Tokenizing..
-Tokenizer Version 1.1
-Language: en
-Number of threads: 1
+Number of sentences after tokenize: 3017
+Building dictionary..
+39161  total words  6336  unique words
+
+number of cases of posi_trump of score 1: 1057
+number of cases of neg_trump of score 0: 1960
+size of training set X&Y: 2325, 2325
+number of cases of posi_trump of score 1: 231
+number of cases of neg_trump of score 0: 532
+size of testing set X&Y: 508, 508
+
+
+Number of sentences after tokenize: 4456
+Building dictionary..
+58005  total words  7081  unique words
 Done
-Number of sentences after tokenize: 14588
+number of cases of posi_hillary of score 1: 569
+number of cases of neg_hillary of score 0: 3887
+size of training set X&Y: 1251, 1251
+number of cases of posi_hillary of score 1: 147
+number of cases of neg_hillary of score 0: 963
+size of testing set X&Y: 323, 323
+
+
+Number of sentences after tokenize: 2079
 Building dictionary..
-230751  total words  19502  unique words
-
-number of cases of posi_trump of score 1: 1452
-size of training set X&Y: 1452, 1452
-
-number of cases of neg_trump of score 0: 13136
-size of training set X&Y: 14588, 14588
-
-number of cases of posi_trump of score 1: 328
-size of testing set X&Y: 328, 328
-
-number of cases of neg_trump of score 0: 3268
-size of testing set X&Y: 3596, 3596
-
-List of Folders involved for dictionary building:  ['neut_posi', 'neg_posi', 'posi_neg', 'neut_neg', 'neg_neg']
-build_dict(data set path):  C:\Users\Nimburg\Desktop\Ultra_Phase1v5_Phase2V2\Ultra_Phase2v2\src\../Data/DataSet_Tokenize/train
-Number of sentences before tokenize: 11738
-
-Building dictionary..
-177728  total words  15751  unique words
-
-number of cases of posi_hillary of score 1: 345
-size of training set X&Y: 345, 345
-
-number of cases of neg_hillary of score 0: 11393
-size of training set X&Y: 11738, 11738
-
-number of cases of posi_hillary of score 1: 79
-size of testing set X&Y: 79, 79
-
-number of cases of neg_hillary of score 0: 2843
-size of testing set X&Y: 2922, 2922
-
-List of Folders involved for dictionary building:  ['posi_neut', 'posi_neg', 'neut_posi', 'neg_posi', 'neg_neg']
-build_dict(data set path):  C:\Users\Nimburg\Desktop\Ultra_Phase1v5_Phase2V2\Ultra_Phase2v2\src\../Data/DataSet_Tokenize/train
-Number of sentences before tokenize: 2960
-
-Number of sentences after tokenize: 2960
-Building dictionary..
-43113  total words  6723  unique words
-
-number of cases of trump of score 2: 1432
-size of training set X&Y: 1432, 1432
-
-number of cases of hillary of score 0: 341
-size of training set X&Y: 1773, 1773
-
-number of cases of neutral of score 1: 1187
-size of training set X&Y: 2960, 2960
-
-number of cases of trump of score 2: 348
-size of testing set X&Y: 348, 348
-
-number of cases of hillary of score 0: 83
-size of testing set X&Y: 431, 431
-
-number of cases of neutral of score 1: 291
-size of testing set X&Y: 722, 722
-
-
+22809  total words  3452  unique words
+number of cases of trump of score 2: 1057
+Done
+number of cases of hillary of score 0: 569
+number of cases of neutral of score 1: 453
+size of training set X&Y: 1539, 1539
+number of cases of trump of score 2: 231
+Done
+number of cases of hillary of score 0: 147
+number of cases of neutral of score 1: 146
+size of testing set X&Y: 468, 468
 
 
 '''

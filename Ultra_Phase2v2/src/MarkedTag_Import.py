@@ -49,13 +49,15 @@ def MarkedTag_Import(file_name_list):
 			# keyword 1
 			if counter_keyword == 1:
 				MarkedTags_dict[tag_text] = tuple( [ sum(x) for x in zip( MarkedTags_dict[tag_text],
-																		( int(row[1]) ,0 ) ) ] 
+																		( round( float(row[1]) ) ,0 ) 
+																		) ] 
 												 )
 				# print tag_text, MarkedTags_dict[tag_text]
 			# keyword 2
 			if counter_keyword == 2:
 				MarkedTags_dict[tag_text] = tuple( [ sum(x) for x in zip( MarkedTags_dict[tag_text],
-																		( 0, int(row[1]) ) ) ] 
+																		( 0, round( float(row[1]) ) ) 
+																		) ] 
 												 )
 				# print tag_text, MarkedTags_dict[tag_text]
 	# return dict()
@@ -65,11 +67,30 @@ def MarkedTag_Import(file_name_list):
 ####################################################################
 '''
 
-def TextExtract_byTags(connection, MarkedTags_dict, path_save, ratio_train_test, size_dataset, 
-					   keyword1, keyword2, thre_nonTagWords):
+def TextExtract_byTags(connection, MarkedTags_dict, path_save, flag_trainOrpredict, 
+					   ratio_train_test, size_dataset, 
+					   thre_nonTagWords, flag_ridTags, flag_NeutralFiles, 
+					   SQL_tableName):
 	'''
 	path_save: the path to data set before tokenize
+			   '../Data/DataSet_Training/' for training LSTM
+	flag_trainOrpredict: whether this is training LSTM or predicting using LSTM
+						 True for training
+						 False for predicting
+
+	MarkedTags_dict: dict() of tags with scores; 
+					 the set of tags based on which to extract tweets
+
 	ratio_train_test: the ratio of train/test
+	size_dataset: limit how many tweets to extract
+	keyword1&2: in this case, trump and hillary
+
+	thre_nonTagWords: the threshold of number of non-tag words
+	flag_ridTags: whether to get rid of hash tags when estimating number of non-tag words
+	flag_NeutralFiles: whether to write files with (0,0) scores
+	
+	SQL_tableName: name of the filtered_tweet_stack_'tableName'
+
 	'''
 	####################################################################
 	# select from tweet_stack table directly tweets that have either of the keywords
@@ -77,27 +98,38 @@ def TextExtract_byTags(connection, MarkedTags_dict, path_save, ratio_train_test,
 	Extracted_TagList = []
 	# Comds for selection
 	Comd_ExtractTweetText = """
-SELECT tweetID, tweetText, TagList_text
-FROM tweet_stack
-where TagList_text LIKE '%s' or TagList_text LIKE '%s';"""
-	keyword1_sql = '%'+keyword1+'%'
-	keyword2_sql = '%'+keyword2+'%'
+SELECT tweetID, tweetText, TagList_text, tweetTime, userID
+FROM tweet_stack;"""
 	# Execute Comds
 	print "extracting tweets from tweet_stack"
 	try:
 		with connection.cursor() as cursor:
-			cursor.execute( Comd_ExtractTweetText % tuple( [keyword1_sql]+[keyword2_sql] ) )
+			cursor.execute( Comd_ExtractTweetText )
 			result = cursor.fetchall()
 			# loop through all rows of this table
+			counter = 0
 			for entry in result:
+				flag_takeTweet = False
 				# print entry  
 				# {u'tag': u'hillary2016forsanity', u'tag_Ncall': 1}
 				# in MySQL, tag format is utf8, but in raw data as ASCII
-				tweetID_str = str(entry['tweetID']).decode('utf-8').encode('ascii', 'ignore')
-				Text_str = str(entry['tweetText']).decode('utf-8').encode('ascii', 'ignore')
+				tweetID_str = str( entry['tweetID'] ).decode('utf-8').encode('ascii', 'ignore')				
+				Text_str = str( entry['tweetText'] ).decode('utf-8').encode('ascii', 'ignore')
 				Text_str = Text_str.lower()
-				taglist_str = str(entry['TagList_text']).decode('utf-8').encode('ascii', 'ignore')
-				Extracted_TagList.append([tweetID_str, Text_str, taglist_str])
+				taglist_str = str( entry['TagList_text'] ).decode('utf-8').encode('ascii', 'ignore')
+				tweetTime_str = str( entry['tweetTime'] ).decode('utf-8').encode('ascii', 'ignore')
+				userID_str = str( entry['userID'] ).decode('utf-8').encode('ascii', 'ignore')
+				# check against MarkedTags_dict before append into Extracted_TagList
+				for key in MarkedTags_dict:
+					# for example, 'nevertrump' and 'nevertrumpers'
+					new_key = ","+key+","
+					if new_key in taglist_str:
+						flag_takeTweet = True
+						counter += 1
+						print "N of tweets: %i Found tag: %s" % tuple( [counter] + [key] )
+						break # only need to have 1 tag from Extracted_TagList
+				if flag_takeTweet == True:
+					Extracted_TagList.append([tweetID_str, Text_str, taglist_str, tweetTime_str, userID_str])
 	finally:
 		pass
 	# data check
@@ -128,13 +160,17 @@ where TagList_text LIKE '%s' or TagList_text LIKE '%s';"""
 				# concatenate list back to string, without @usernames
 				tweetText_new += word
 				tweetText_new += ' '
-			# remove MenUser names from tweetText_wordList
-			# this is after concatenate this word back into string			
-			# check against keyword 1&2, against MenUsers and https		
-			if ('@' in word) or ('https' in word) or (keyword1 in word) or (keyword2 in word):
+			# remove MenUser and https from tweetText_wordList
+			# this is after concatenate this word back into string				
+			if ('@' in word) or ('https' in word):
 				tweetText_wordList.remove(word)
 		# post filter tweetText
-		tweet[1] = tweetText_new		
+		tweet[1] = tweetText_new 
+		# get rid of tags of this tweet; more strict thre_nonTagWords
+		if flag_ridTags == True:
+			for tag in taglist:
+				if tag in tweetText_wordList:
+					tweetText_wordList.remove(tag)
 		# check against thre_nonTagWords
 		if len(tweetText_wordList) >= thre_nonTagWords: 
 			flag_nonTagWords = True
@@ -162,10 +198,79 @@ where TagList_text LIKE '%s' or TagList_text LIKE '%s';"""
 		####################################################################
 		# append into Extracted_Scores
 		if flag_nonTagWords == True:
-			Extracted_Scores.append( [tweet[0], tweet[1], tweet_score ] )
+			Extracted_Scores.append( [tweet[0], tweet[1], tweet_score, tweet[3], tweet[4], tweet[2] ] )
 	# check
 	print "total number of tweets scored and past tweetText filter: %i" % len(Extracted_Scores)
 	
+	####################################################################
+	# load Extracted_Scores into filtered_tweet_stack
+
+	# creating filtered_tweet_stack_'tableName'
+	# Do NOT drop Tweet_Stack; Luigid consideration
+	tableName = "filtered_tweet_stack_" + SQL_tableName
+	Comd_TweetStack_Init = """
+CREATE TABLE IF NOT EXISTS %s
+(
+	tweetID BIGINT PRIMARY KEY NOT NULL,
+	tweetTime TIMESTAMP NOT NULL,
+	userID BIGINT NOT NULL,
+	tweetText varchar(3000) COLLATE utf8_bin,
+	TagList_text varchar(3000), 
+	Sc_Tags varchar(20)
+) ENGINE=MEMORY DEFAULT CHARSET=utf8 COLLATE=utf8_bin"""
+	# execute commands
+	try:
+		with connection.cursor() as cursor:
+			cursor.execute( Comd_TweetStack_Init % tableName )
+		# commit commands
+		print "%s Initialized" % tableName
+		connection.commit()
+	finally:
+		pass
+	
+	# load data into filtered_tweet_stack_'tableName'
+	# Extracted_TagList.append([tweetID_str, Text_str, taglist_str, tweetTime_str, userID_str])
+	# Extracted_Scores.append( [tweet[0], tweet[1], tweet_score, tweet[3], tweet[4], tweet[2] ] )
+	print "Loading %s" % tableName
+	for tweet in Extracted_Scores:
+		# Comd
+		comd_TweetStack_Insert = """
+INSERT INTO %s (tweetID, tweetTime, userID, tweetText, TagList_text, Sc_Tags)
+VALUES ( %s, '%s', %s, '%s', '%s', '%s')
+ON DUPLICATE KEY UPDATE userID = %s;"""
+		# execute commands
+		try:
+			with connection.cursor() as cursor:
+				cursor.execute( comd_TweetStack_Insert % tuple( [tableName] + 
+																[ tweet[0] ] + 
+																[ tweet[3] ] + 
+																[ tweet[4] ] + 
+																[ tweet[1][:2900] ] + 
+																[ tweet[5][:2900] ] + 
+																[ tweet[2] ] + 
+																[ tweet[4] ]
+															   )
+							  )
+			# commit commands 
+			connection.commit()
+		finally:
+			pass
+
+	#Comd
+	comd_convert = """
+ALTER TABLE %s ENGINE=InnoDB;"""
+	# execute commands
+	try:
+		with connection.cursor() as cursor:
+			cursor.execute( comd_convert % tableName )
+		# commit commands
+		print tableName+" Converted"
+		connection.commit()
+	finally:
+		pass
+
+	print "Finished Loading %s" % tableName
+
 	####################################################################
 	# shuffle Extracted_Scores, Extracted_Scores originally in time order
 	N_tweets = len(Extracted_Scores)
@@ -187,11 +292,16 @@ where TagList_text LIKE '%s' or TagList_text LIKE '%s';"""
 	counter_train = 1.0*ratio_train_test*N_tweets
 	# go through Extracted_Scores
 	for idx in range( N_tweets ):
-		# paths split by ratio_train_test
-		if idx <= counter_train:
-			path_train_test = 'train/'
-		if idx > counter_train:
-			path_train_test = 'test/'
+		# whether this is training or predicting
+		if flag_trainOrpredict == True: 
+			# paths split by ratio_train_test
+			if idx <= counter_train:
+				path_train_test = 'train/'
+			if idx > counter_train:
+				path_train_test = 'test/'
+		if flag_trainOrpredict == False:
+			path_train_test = ''
+		
 		# paths split by scores
 		path_score = ''
 		if Extracted_Scores[idx][2][0] == 1 and Extracted_Scores[idx][2][1] == 1:
@@ -204,8 +314,12 @@ where TagList_text LIKE '%s' or TagList_text LIKE '%s';"""
 			path_score = 'neut_posi/'
 		
 		if Extracted_Scores[idx][2][0] == 0 and Extracted_Scores[idx][2][1] == 0:
-			#path_score = 'neut_neut/'
-			continue
+			# whether to write neutral files or not
+			# usually too much files have (0,0) scores
+			if flag_NeutralFiles == True:
+				path_score = 'neut_neut/'
+			elif flag_NeutralFiles == False:
+				continue
 		
 		if Extracted_Scores[idx][2][0] == 0 and Extracted_Scores[idx][2][1] == -1:
 			path_score = 'neut_neg/'
@@ -215,6 +329,7 @@ where TagList_text LIKE '%s' or TagList_text LIKE '%s';"""
 			path_score = 'neg_neut/'
 		if Extracted_Scores[idx][2][0] == -1 and Extracted_Scores[idx][2][1] == -1:
 			path_score = 'neg_neg/'
+		
 		# open write close
 		file_name = path_save + path_train_test + path_score + Extracted_Scores[idx][0] + '.txt'
 		file = open(file_name,'w')
@@ -222,8 +337,8 @@ where TagList_text LIKE '%s' or TagList_text LIKE '%s';"""
 		file.close()
 	
 	####################################################################
+	
 	return None
-
 
 """
 ####################################################################
@@ -238,7 +353,6 @@ if __name__ == "__main__":
 	file_name_list = ['Test_MarkedTag_Key1.csv','Test_MarkedTag_Key2.csv']
 	path_preToken_DataSet = '../Data/DataSet_Tokenize/'
 	
-
 
 	MarkedTags_dict = MarkedTag_Import(file_name_list=file_name_list)
 
