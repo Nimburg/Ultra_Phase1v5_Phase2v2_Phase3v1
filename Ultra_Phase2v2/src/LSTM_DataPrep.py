@@ -209,6 +209,7 @@ def load_data_for_prediction(dataset, path_dataset,
 	# and its Y values are meaningless, although with the correct max value inserted
 	single_data_set = pickle.load(f)
 	fileNames = pickle.load(f)
+	scores_tag = pickle.load(f)
 
 	print "check single_data_set: "
 	print single_data_set[0][:3]
@@ -254,7 +255,7 @@ def load_data_for_prediction(dataset, path_dataset,
 	single_data_set = (single_data_set_x, single_data_set_y)
 	
 	#################################################################
-	return single_data_set, fileNames
+	return single_data_set, fileNames, scores_tag
 
 '''
 ####################################################################################

@@ -164,7 +164,7 @@ def Pahse2_Part1_Main(file_name_list, MySQL_DBkey,
 					  path_DataSet_training, path_tokenizer, ratio_train_test, 
 					  size_dataset, thre_nonTagWords,
 					  list_dict_tokenizeParameters, 
-					  flag_trainOrpredict, flag_ridTags, flag_NeutralFiles):
+					  flag_trainOrpredict, flag_ridTags, flag_NeutralFiles, predict_Name=None):
 	'''
 		Phase2 Part1 Main Function
 		tokenization and related
@@ -197,19 +197,26 @@ def Pahse2_Part1_Main(file_name_list, MySQL_DBkey,
 
 	# create MarkedTags_dict from .csv
 	MarkedTags_dict = MarkedTag_Import(file_name_list=file_name_list)
+	
+	if flag_trainOrpredict == True: 
+		SQL_tableName = "training"
+	if flag_trainOrpredict == False and predict_Name is not None: 
+		SQL_tableName = predict_Name
+
 	# extract all tweets from tweet_stack which contains key_tags
 	# using MarkedTags_dict to create
-	TextExtract_byTags(connection=connection, MarkedTags_dict=MarkedTags_dict, 
-					   path_save=path_DataSet_training, flag_trainOrpredict=flag_trainOrpredict, # training LSTM
-					   ratio_train_test=ratio_train_test, size_dataset=size_dataset, 
-					   thre_nonTagWords=thre_nonTagWords, 
-					   flag_ridTags=flag_ridTags, flag_NeutralFiles=flag_NeutralFiles, 
-					   SQL_tableName="training")
+	dict_train, dict_test = TextExtract_byTags(connection=connection, MarkedTags_dict=MarkedTags_dict, 
+											   path_save=path_DataSet_training, flag_trainOrpredict=flag_trainOrpredict, # training LSTM
+											   ratio_train_test=ratio_train_test, size_dataset=size_dataset, 
+											   thre_nonTagWords=thre_nonTagWords, 
+											   flag_ridTags=flag_ridTags, flag_NeutralFiles=flag_NeutralFiles, 
+											   SQL_tableName=SQL_tableName)
 	
 	# tokenization
 	for dict_case in list_dict_tokenizeParameters: 
 		dict_case['N_uniqueWords'] = Tokenize_Main(dict_parameters = dict_case, 
-												   flag_trainOrpredict=flag_trainOrpredict)
+												   flag_trainOrpredict=flag_trainOrpredict,
+												   dict_train=dict_train, dict_test=dict_test)
 		print dict_case
 
 	####################################################################
@@ -294,20 +301,18 @@ if __name__ == "__main__":
 		}
 
 	####################################################################
-
-	# tokenizer path variables
-	path_preToken_Training = '../Data/DataSet_Training/'
-	path_preToken_Predicting = '../Data/DataSet_Predicting/'
-	
 	path_tokenizer = './scripts/tokenizer/'
+	
+	# training
+	path_preToken_Training = '../Data/DataSet_Training/'
+	file_name_list_training = ['MarkedTag_keyword1.csv','MarkedTag_keyword2.csv']	
+	flag_training = False  
 
-	# MarkedTag_Import file_name_list
-	file_name_list = ['MarkedTag_keyword1.csv','MarkedTag_keyword2.csv']
-
-	####################################################################
-
-	flag_training = True 
-	flag_predicting = False
+	# predicting
+	path_preToken_Predicting = '../Data/DataSet_Predicting/'
+	file_name_list_predicting = ['MarkedTag_keyword1.csv','MarkedTag_keyword2.csv']
+	predict_Name = "testPredict"
+	flag_predicting = True  
 
 	####################################################################
 	# for training !!!
@@ -322,7 +327,7 @@ if __name__ == "__main__":
 										dict_tokenizeParameters_trainAgainst_hillary,
 										dict_tokenizeParameters_trainAgainst_trumphillary]
 
-		Pahse2_Part1_Main(file_name_list=file_name_list, MySQL_DBkey=MySQL_DBkey, 
+		Pahse2_Part1_Main(file_name_list=file_name_list_training, MySQL_DBkey=MySQL_DBkey, 
 						  path_DataSet_training=path_preToken_Training, path_tokenizer=path_tokenizer,
 						  ratio_train_test=0.8, 
 						  size_dataset=None, # total number of tweets for tokenize
@@ -342,7 +347,7 @@ if __name__ == "__main__":
 	if flag_predicting == True:
 
 		# setting path for .txt files
-		dict_tokenizeParameters_predicting_['dataset_path'] = path_preToken_Predicting
+		dict_tokenizeParameters_trainAgainst_trump['dataset_path'] = path_preToken_Predicting
 
 		# setting correct 9 folders to the class with highest Y-value
 		full_folder_list = ['posi_posi', 'posi_neut', 'posi_neg',
@@ -350,13 +355,13 @@ if __name__ == "__main__":
 							'neg_posi', 'neg_neut', 'neg_neg']
 		# thus passing the Y-value_max into LSTM
 		# and setting all other folders to [], avoiding overlapping data
-		dict_tokenizeParameters_predicting_['posi_trump_folder'] = full_folder_list
-		dict_tokenizeParameters_predicting_['neg_trump_folder'] = []
+		# dict_tokenizeParameters_trainAgainst_trump['posi_trump_folder'] = full_folder_list
+		# dict_tokenizeParameters_trainAgainst_trump['neg_trump_folder'] = []
 
 		# load into list_dict_tokenizeParameters
-		list_dict_tokenizeParameters = [dict_tokenizeParameters_predicting_]
+		list_dict_tokenizeParameters = [dict_tokenizeParameters_trainAgainst_trump]
 
-		Pahse2_Part1_Main(file_name_list=file_name_list, MySQL_DBkey=MySQL_DBkey, 
+		Pahse2_Part1_Main(file_name_list=file_name_list_predicting, MySQL_DBkey=MySQL_DBkey, 
 						  path_DataSet_training=path_preToken_Predicting, path_tokenizer=path_tokenizer,
 						  ratio_train_test=0.8, 
 						  size_dataset=None, # total number of tweets for tokenize
@@ -364,14 +369,13 @@ if __name__ == "__main__":
 						  # the threshold for number of non-tag words, 
 						  # above which a tweet is selected for tokenize
 						  list_dict_tokenizeParameters=list_dict_tokenizeParameters,
+						  predict_Name=predict_Name,
 						  # list of dicts 
 						  # each dict contains parameters for tokenization for specific cases
 						  # related to corresponding LSTM training
 						  flag_trainOrpredict=False, 
 						  flag_ridTags=True , flag_NeutralFiles=True 
 						  )
-
-
 
 
 

@@ -12,13 +12,14 @@ currdir = os.getcwd()
 path = currdir + '/scripts/tokenizer'
 print "path to DataSet_Pickle_Main: ", path
 sys.path.insert(0, path)
-from DataSet_Pickle import DataSet_Pickle_Train
+from DataSet_Pickle import DataSet_Pickle_Train, DataSet_Pickle_Predict
 
 '''
 ####################################################################
 '''
 
-def Tokenize_Main(dict_parameters, flag_trainOrpredict):
+def Tokenize_Main(dict_parameters, flag_trainOrpredict, 
+				  dict_train, dict_test, flag_alsoTxt=False):
 
 	# get current address
 	currdir = os.getcwd()
@@ -38,12 +39,13 @@ def Tokenize_Main(dict_parameters, flag_trainOrpredict):
 	if flag_trainOrpredict == True: 
 		N_uniqueWords = DataSet_Pickle_Train(dict_parameters=dict_parameters,
 							DataSet_preToken_Path=path_preToken_DataSet,
-							path_tokenizer=path_tokenizer)
+							path_tokenizer=path_tokenizer,
+							dict_train=dict_train, dict_test=dict_test)
 	if flag_trainOrpredict == False: 
 		N_uniqueWords = DataSet_Pickle_Predict(dict_parameters=dict_parameters,
 						DataSet_preToken_Path=path_preToken_DataSet,
-						path_tokenizer=path_tokenizer)	
-
+						path_tokenizer=path_tokenizer,
+						dict_dataset=dict_train)
 
 	# return to currdir
 	os.chdir(currdir)

@@ -67,7 +67,7 @@ from Phase1_Stage0_TablePrep import RollingScoreBank_Save, RollingScoreBank_Load
 from Phase1_Stage1 import RollingScore_Update
 from Phase1_Stage3 import RamSQL_UserUnique_update, RamSQL_TagUnique_update
 
-from Phase1_SentiDataSet import KeyTags_Extract
+from Phase1_SentiDataSet import KeyTags_Extract, RelevTags_Extract
 
 
 """
@@ -446,15 +446,15 @@ def Phase1_Main(file_name_list, MySQL_DBkey, time_WindowSize,
 if __name__ == "__main__":
 
 	# controls whether load existing RollingScoreBank
-	flag_load_RollingScoreBank = False  
-	str_pin_time_RSB = '2016_07_27_09' # what time pin
+	flag_load_RollingScoreBank = True 
+	str_pin_time_RSB = '2016_10_20_10' # what time pin
 
 	# controls Phase1_Main(); whether loading data files and creating/extending data base
-	flag_Phase1_Main = False  
+	flag_Phase1_Main = True 
 
 	# controls whether to etract tag_key1&2 from the latest set of RollingScoreBank after Phase1_Main()
 	flag_tagExtract = False 
-	str_pin_time_tag = '2016_07_27_09'
+	str_pin_time_tag = '2016_10_20_10'
 
 	####################################################################
 
@@ -472,7 +472,11 @@ if __name__ == "__main__":
 	# 					'US_tweets_july17.txt', 'US_tweets_july18.txt', 'US_tweets_july19.txt']
 	# file_name_list = ['US_tweets_july20.txt', 'US_tweets_july22.txt', 'US_tweets_july23.txt', 
 	# 					'US_tweets_july24.txt', 'US_tweets_july25.txt', 'US_tweets_july26.txt']
-	file_name_list = ['US_tweets_july27.txt', 'US_tweets_july29.txt', 'US_tweets_july30.txt', 'US_tweets_july31.txt', 'US_tweets_Aug1.txt', 'US_tweets_Aug2.txt']
+	# file_name_list = ['US_tweets_july27.txt', 'US_tweets_july29.txt', 'US_tweets_july30.txt', 
+	# 					'US_tweets_july31.txt', 'US_tweets_Aug1.txt', 'US_tweets_Aug2.txt']
+	# file_name_list = ['US_tweets_Oct15.txt', 'US_tweets_Oct16.txt', 'US_tweets_Oct17.txt', 
+	# 					'US_tweets_Oct18.txt', 'US_tweets_Oct19.txt']
+	file_name_list = ['US_tweets_Oct20.txt', 'US_tweets_Oct21.txt']
 
 	####################################################################
 
@@ -530,6 +534,8 @@ if __name__ == "__main__":
 	# and export such set for manual marking
 	if flag_tagExtract == True:
 		KeyTags_Extract(MySQL_DBkey=MySQL_DBkey, str_pin_time=str_pin_time_tag)
+
+		RelevTags_Extract(MySQL_DBkey=MySQL_DBkey, str_pin_time=str_pin_time_tag)
 
 
 

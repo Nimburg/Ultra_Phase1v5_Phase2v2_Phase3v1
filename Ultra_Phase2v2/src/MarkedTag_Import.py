@@ -70,7 +70,7 @@ def MarkedTag_Import(file_name_list):
 def TextExtract_byTags(connection, MarkedTags_dict, path_save, flag_trainOrpredict, 
 					   ratio_train_test, size_dataset, 
 					   thre_nonTagWords, flag_ridTags, flag_NeutralFiles, 
-					   SQL_tableName):
+					   SQL_tableName, flag_alsoTxt=False):
 	'''
 	path_save: the path to data set before tokenize
 			   '../Data/DataSet_Training/' for training LSTM
@@ -90,6 +90,8 @@ def TextExtract_byTags(connection, MarkedTags_dict, path_save, flag_trainOrpredi
 	flag_NeutralFiles: whether to write files with (0,0) scores
 	
 	SQL_tableName: name of the filtered_tweet_stack_'tableName'
+	flag_SQLorTxt: True then output .txt file; 
+				   False then only create filtered_tweet_stack
 
 	'''
 	####################################################################
@@ -126,7 +128,7 @@ FROM tweet_stack;"""
 					if new_key in taglist_str:
 						flag_takeTweet = True
 						counter += 1
-						print "N of tweets: %i Found tag: %s" % tuple( [counter] + [key] )
+						# print "N of tweets: %i Found tag: %s" % tuple( [counter] + [key] )
 						break # only need to have 1 tag from Extracted_TagList
 				if flag_takeTweet == True:
 					Extracted_TagList.append([tweetID_str, Text_str, taglist_str, tweetTime_str, userID_str])
@@ -290,6 +292,16 @@ ALTER TABLE %s ENGINE=InnoDB;"""
 		N_tweets = size_dataset
 	# splitting point of train/test
 	counter_train = 1.0*ratio_train_test*N_tweets
+	# output dicts
+	# # if for prediction, data will be in dict_train
+	dict_train = {'posi_posi':[], 'posi_neut':[], 'posi_neg':[], 
+				  'neut_posi':[], 'neut_neut':[], 'neut_neg':[],
+				  'neg_posi':[], 'neg_neut':[], 'neg_neg':[]}
+
+	dict_test = {'posi_posi':[], 'posi_neut':[], 'posi_neg':[], 
+				 'neut_posi':[], 'neut_neut':[], 'neut_neg':[],
+				 'neg_posi':[], 'neg_neut':[], 'neg_neg':[]}
+
 	# go through Extracted_Scores
 	for idx in range( N_tweets ):
 		# whether this is training or predicting
@@ -330,15 +342,226 @@ ALTER TABLE %s ENGINE=InnoDB;"""
 		if Extracted_Scores[idx][2][0] == -1 and Extracted_Scores[idx][2][1] == -1:
 			path_score = 'neg_neg/'
 		
-		# open write close
-		file_name = path_save + path_train_test + path_score + Extracted_Scores[idx][0] + '.txt'
-		file = open(file_name,'w')
-		file.write( Extracted_Scores[idx][1] )
-		file.close()
+		# loading into dicts
+		# for training
+		if path_train_test == 'train/' and path_score != '': 
+			dict_train[ path_score[:-1] ].append( (Extracted_Scores[idx][0], Extracted_Scores[idx][1]) )
+		if path_train_test == 'test/' and path_score != '': 
+			dict_test[ path_score[:-1] ].append( (Extracted_Scores[idx][0], Extracted_Scores[idx][1]) )
+		# for predicting
+		if flag_trainOrpredict == False:
+			# tweetID, tweetText, score_tuple by tags
+			dict_train[ path_score[:-1] ].append( (Extracted_Scores[idx][0], Extracted_Scores[idx][1], Extracted_Scores[idx][2]) 
+												)			
+
+		# whether output .txt or not
+		if flag_alsoTxt == True: 
+			# open write close
+			file_name = path_save + path_train_test + path_score + Extracted_Scores[idx][0] + '.txt'
+			file = open(file_name,'w')
+			file.write( Extracted_Scores[idx][1] )
+			file.close()
 	
 	####################################################################
-	
+	# check
+	for key in dict_train:
+		print "dict_train check: key: %s N_sentences: %i" % tuple( [key]+[len(dict_train[key])]
+																)
+	for key in dict_test:
+		print "dict_test check: key: %s N_sentences: %i" % tuple( [key]+[len(dict_test[key])]
+																)
+	# output dicts
+	if flag_trainOrpredict == True:
+		return dict_train, dict_test
+	if flag_trainOrpredict == False:
+		return dict_train, None
+
+
+"""
+####################################################################
+
+Load post-Prediction Data
+
+####################################################################
+"""
+
+def Load_Predictions(MySQL_DBkey, pred_columnName, sql_tableName, 
+					 fileName_Scores_tuple, predictions_tuple):
+
+	####################################################################
+	# local function, set temp table limits
+	def Set_TempTable_Variables(MySQL_DBkey, N_GB):
+		""" 
+			Parameters
+			----------
+			Returns
+			-------
+		"""	
+		####################################################################
+		# Connect to the database
+		connection = pymysql.connect(host=MySQL_DBkey['host'],
+									 user=MySQL_DBkey['user'],
+									 password=MySQL_DBkey['password'],
+									 db=MySQL_DBkey['db'],
+									 charset=MySQL_DBkey['charset'],
+									 cursorclass=pymysql.cursors.DictCursor)
+
+		####################################################################
+		comd_set_temptable = """
+SET GLOBAL tmp_table_size = 1024 * 1024 * 1024 * %i;
+SET GLOBAL max_heap_table_size = 1024 * 1024 * 1024 * %i;
+	"""
+		# execute Initialize Table commands
+		try:
+			with connection.cursor() as cursor:
+				cursor.execute( comd_set_temptable % (N_GB, N_GB) )
+			# commit commands
+			print "Temp table size set for 1024 * 1024 * 1024 * %i" % N_GB
+			connection.commit()
+		finally:
+			pass
+		connection.close()
+		return None
+	####################################################################
+	# set in-RAM table size
+	Set_TempTable_Variables(MySQL_DBkey = MySQL_DBkey, N_GB = 4)
+	# Re-Connect to the database
+	connection = pymysql.connect(host=MySQL_DBkey['host'],
+								 user=MySQL_DBkey['user'],
+								 password=MySQL_DBkey['password'],
+								 db=MySQL_DBkey['db'],
+								 charset=MySQL_DBkey['charset'],
+								 cursorclass=pymysql.cursors.DictCursor)
+
+	####################################################################
+
+	###########################################
+	# Convert and Expand filtered_tweet_stack #
+	###########################################
+
+	# Comd for convert to temp table
+	print "Starting convert %s to ENGINE=MEMORY" % sql_tableName
+	comd_convert = """
+ALTER TABLE %s ENGINE=MEMORY;"""
+	# execute commands
+	try:
+		with connection.cursor() as cursor:
+			cursor.execute( comd_convert % sql_tableName )
+		# commit commands
+		print sql_tableName + " Converted"
+		connection.commit()
+	finally:
+		pass
+
+	# Comd for adding new columns to filtered_tweet_stack
+	# new columns:
+	# Sc_Tags_C, pred_columnName
+	# for prob_distribution and class_argmax
+	pred_columnName_prob = pred_columnName + '_prob'
+	pred_columnName_class = pred_columnName + '_class'
+	print "Adding new columns"
+	# comds
+	comd_addColumns = """
+ALTER TABLE %s ADD %s VARCHAR( 256 );
+ALTER TABLE %s ADD %s VARCHAR( 256 );
+ALTER TABLE %s ADD %s VARCHAR( 256 );"""
+	print comd_addColumns % tuple( [sql_tableName] + 
+													 ['Sc_Tags_C'] + 
+													 [sql_tableName] + 
+													 [pred_columnName_prob] +
+													 [sql_tableName] + 
+													 [pred_columnName_class]
+								 )
+	# execute commands
+	try:
+		with connection.cursor() as cursor:
+			cursor.execute( comd_addColumns % tuple( [sql_tableName] + 
+													 ['Sc_Tags_C'] + 
+													 [sql_tableName] + 
+													 [pred_columnName_prob] +
+													 [sql_tableName] + 
+													 [pred_columnName_class]
+													)
+						  )
+		# commit commands
+		connection.commit()
+	finally:
+		pass
+
+	#####################################################
+	# Add predictions to filtered_tweet_stack then Save #
+	#####################################################
+
+	# extract list variables from tuple_of_list varialbes
+	# fileName_Scores_tuple = ( fileNames, scores_tag )
+	# predictions_tuple = ( dataset_preds_prob, dataset_preds)
+	fileNames = fileName_Scores_tuple[0]
+	scores_tag = fileName_Scores_tuple[1]
+	dataset_preds_prob = predictions_tuple[0]
+	dataset_preds = predictions_tuple[1]
+	# locate the min_len() of these variables, raise Error if not same
+	len_list = [len(fileNames), len(scores_tag), len(dataset_preds_prob), len(dataset_preds)]
+	idx_limit = min( len_list )
+	print "idx_limit, ", idx_limit
+
+	# loop through
+	for idx in range(idx_limit):
+
+		# comd_Insert variables; all string format
+		str_tweetID = str( fileNames[idx] )
+		str_Sc_Tags = str( scores_tag[idx] )
+		
+		if len(dataset_preds_prob[idx,:]) == 2:
+			str_prob = "(%.2f, %.2f)" % tuple( [ dataset_preds_prob[idx,0] ] + 
+											   [ dataset_preds_prob[idx,1] ]
+											 )
+		
+		if len(dataset_preds_prob[idx,:]) == 3:
+			str_prob = "(%.2f, %.2f, %.2f)" % tuple( [ dataset_preds_prob[idx,0] ] + 
+											   		 [ dataset_preds_prob[idx,1] ] + 
+											   		 [ dataset_preds_prob[idx,2] ]
+											 		)
+
+		str_class = "%.1f" % round( dataset_preds[idx], 1)
+		# command to insert Sc_Tags_C, pred_columnName_prob, pred_columnName_class
+		comd_Update = """
+UPDATE %s 
+SET Sc_Tags_C='%s', %s='%s', %s='%s'
+WHERE tweetID = %s;"""
+		# execute commands
+		try:
+			with connection.cursor() as cursor:
+				cursor.execute( comd_Update % tuple( [sql_tableName] + 
+													 [str_Sc_Tags] + 
+													 [pred_columnName_prob] + 
+													 [str_prob] + 
+													 [pred_columnName_class] + 
+													 [str_class] + 
+													 [str_tweetID]
+													) 
+							  )
+			# commit commands
+			connection.commit()
+		finally:
+			pass
+
+	# Comd for convert to temp table
+	print "Starting convert %s to ENGINE=InnoDB" % sql_tableName
+	comd_convert = """
+ALTER TABLE %s ENGINE=InnoDB;"""
+	# execute commands
+	try:
+		with connection.cursor() as cursor:
+			cursor.execute( comd_convert % sql_tableName )
+		# commit commands
+		print sql_tableName + " Converted"
+		connection.commit()
+	finally:
+		pass
+
+	####################################################################
 	return None
+
 
 """
 ####################################################################
@@ -354,28 +577,7 @@ if __name__ == "__main__":
 	path_preToken_DataSet = '../Data/DataSet_Tokenize/'
 	
 
-	MarkedTags_dict = MarkedTag_Import(file_name_list=file_name_list)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	# MarkedTags_dict = MarkedTag_Import(file_name_list=file_name_list)
 
 
 

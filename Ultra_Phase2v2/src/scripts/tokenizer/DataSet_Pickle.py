@@ -32,25 +32,39 @@ def tokenize(sentences):
 ########################################################################################
 """
 
-def build_dict(path_data, path_tokenizer, path_folderList):
+def build_dict(path_data, path_tokenizer, path_folderList, 
+			   dict_train, # dict() is built on training dataset only
+			   flag_alsoTxt=False):
 	'''
 	path: the universal 'path' variable + train or test
 
 	Note: to build the dictionary, it is actually OK to use all the cases
 	'''
-	print 'build_dict(data set path): ', path_data
 	sentences = []
 	
 	####################################################################
-	# go through all necessary folders
-	# path_folderList = ['%s/posi_neut/','%s/posi_neg/','%s/neut_posi/', etc]
-	for path in path_folderList:
-		# change address to posi texts
-		os.chdir( path % path_data)
-		for ff in glob.glob("*.txt"):
-			with open(ff, 'r') as f:
-				sentences.append(f.readline().strip())	
+	# using .txt files and folders
+	if flag_alsoTxt == True: 
+		print 'build_dict(data set path): ', path_data
+		# go through all necessary folders
+		# path_folderList = ['%s/posi_neut/','%s/posi_neg/','%s/neut_posi/', etc]
+		for path in path_folderList:
+			# change address to posi texts
+			os.chdir( path % path_data)
+			for ff in glob.glob("*.txt"):
+				with open(ff, 'r') as f:
+					sentences.append(f.readline().strip())	
+	# using dicts variables directly
+	if flag_alsoTxt == False: 
+		# this key will be 'posi_posi' etc
+		for key in path_folderList:
+			# item will be each tuple of this list
+			# 2nd value in item is the sentence
+			for item in dict_train[ key[3:-1] ]:
+				sentences.append( item[1] )
 
+	####################################################################
+	# tokenization
 	# since tokenizer.perl is in this address
 	os.chdir(path_tokenizer)
 	print "Number of sentences before tokenize: %i" % len(sentences)
@@ -60,7 +74,7 @@ def build_dict(path_data, path_tokenizer, path_folderList):
 	####################################################################
 	# post tokenization
 	print 'Building dictionary..'
-
+	
 	# {word token : N_calls}
 	wordcount = dict() 
 	for ss in sentences:
@@ -88,21 +102,36 @@ def build_dict(path_data, path_tokenizer, path_folderList):
 ########################################################################################
 """
 
-def grab_data(path_data, path_tokenizer, dictionary):
+def grab_data(path_data, path_tokenizer, dictionary, 
+			  dict_dataset, # dict() is built on training dataset only
+			  flag_alsoTxt=False):
 	'''
 	path: the universal 'path' variable + train or test + pos or neg
 	dictionary: 
 	'''
 	sentences = []
-	# change to given data set address
-	os.chdir(path_data)
-	for ff in glob.glob("*.txt"):
-		with open(ff, 'r') as f:
-			sentences.append(f.readline().strip())
+	
+	####################################################################
+	# using .txt files and folders
+	if flag_alsoTxt == True: 
+		# change to given data set address
+		os.chdir(path_data)
+		for ff in glob.glob("*.txt"):
+			with open(ff, 'r') as f:
+				sentences.append(f.readline().strip())
+	# using dicts variables directly
+	if flag_alsoTxt == False: 
+		# this key will be 'posi_posi' etc
+		key = path_data.split('/')[-1]
+		for item in dict_dataset[key]:
+			sentences.append( item[1] )	
+
+	####################################################################
 	# change to tokenizer address
 	os.chdir(path_tokenizer)
+	# tokenize
 	sentences = tokenize(sentences)
-
+	# word2int
 	seqs = [None] * len(sentences)
 	for idx, ss in enumerate(sentences):
 		words = ss.strip().lower().split() # list of word tokens per sentence from sentences
@@ -114,39 +143,59 @@ def grab_data(path_data, path_tokenizer, dictionary):
 ########################################################################################
 """
 
-def grab_data_fileName(path_data, path_tokenizer, dictionary):
+def grab_data_fileName(path_data, path_tokenizer, dictionary,
+					   dict_dataset, # dict() is built on training dataset only
+					   flag_alsoTxt=False):
 	'''
 	path: the universal 'path' variable + train or test + pos or neg
 	dictionary: 
 	'''
 	sentences = []
 	fileNames = []
-	# change to given data set address
-	os.chdir(path_data)
-	for ff in glob.glob("*.txt"):
-		with open(ff, 'r') as f:
-			temp = ff.split('.')
-			fileName = temp[0]
-			# print fileName
-			sentences.append(f.readline().strip())
-			fileNames.append(fileName)
+	score_tags = []
+	
+	####################################################################
+	# using .txt files and folders
+	if flag_alsoTxt == True: 
+		# change to given data set address
+		os.chdir(path_data)
+		for ff in glob.glob("*.txt"):
+			with open(ff, 'r') as f:
+				temp = ff.split('.')
+				fileName = temp[0]
+				# print fileName
+				sentences.append(f.readline().strip())
+				fileNames.append(fileName)
+	# using dicts variables directly
+	if flag_alsoTxt == False: 
+		# this key will be 'posi_posi' etc
+		key = path_data.split('/')[-1]
+		for item in dict_dataset[key]:
+			sentences.append( item[1] )	
+			fileNames.append( item[0] )
+			score_tags.append( item[2] )
+
+	####################################################################
 	# change to tokenizer address
 	os.chdir(path_tokenizer)
+	# tokenize
 	sentences = tokenize(sentences)
-
+	# word2int
 	seqs = [None] * len(sentences)
 	for idx, ss in enumerate(sentences):
 		words = ss.strip().lower().split() # list of word tokens per sentence from sentences
 		seqs[idx] = [dictionary[w] if w in dictionary else 1 for w in words]
 
-	return seqs, fileNames
+	return seqs, fileNames, score_tags
 
 
 """
 ########################################################################################
 """
 
-def DataSet_Pickle_Train(dict_parameters, DataSet_preToken_Path, path_tokenizer, flag_truncate = True):
+def DataSet_Pickle_Train(dict_parameters, DataSet_preToken_Path, path_tokenizer, 
+						 dict_train, dict_test, 
+						 flag_truncate = True, flag_alsoTxt=False):
 	'''
 	DataSet_preToken_Path: '../Data/DataSet_Tokenize/'
 	path_tokenizer: './scripts/tokenizer/'
@@ -184,11 +233,13 @@ def DataSet_Pickle_Train(dict_parameters, DataSet_preToken_Path, path_tokenizer,
 
 	# build dictionary
 	dictionary = build_dict(path_data=os.path.join(DataSet_preToken_Path, 'train'), 
-							path_tokenizer=path_tokenizer, path_folderList=path_folderList_dict)
+							path_tokenizer=path_tokenizer, path_folderList=path_folderList_dict, 
+							dict_train=dict_train
+			   				)
 
 	###############################################################################
 	# local function used to grab_data() from given list of folders
-	def folderList_grab_data(path_folderList, trainOrtest, case_score):
+	def folderList_grab_data(path_folderList, trainOrtest, case_score, dict_dataset):
 		'''
 		path_folderList: list of paths 
 		trainOrtest: 'train/' or 'test/'
@@ -203,7 +254,8 @@ def DataSet_Pickle_Train(dict_parameters, DataSet_preToken_Path, path_tokenizer,
 			
 			vari_X_values = grab_data(path_data=DataSet_preToken_Path+path_folder, 
 									  path_tokenizer=path_tokenizer,
-									  dictionary=dictionary)
+									  dictionary=dictionary,
+									  dict_dataset=dict_dataset)
 			
 			return_X_values = return_X_values + vari_X_values
 			return_Y_values = return_Y_values + [case_score] * len(vari_X_values)
@@ -228,8 +280,9 @@ def DataSet_Pickle_Train(dict_parameters, DataSet_preToken_Path, path_tokenizer,
 		case_score = dict_parameters[name_case_score]
 		# for this case, grab data
 		case_x, case_y, Ncase =folderList_grab_data(path_folderList=case_folderList, 
-													  trainOrtest='train/', 
-													  case_score=case_score)
+													trainOrtest='train/', 
+													case_score=case_score,
+													dict_dataset=dict_train)
 		print "number of cases of %s of score %i: %i" % tuple( [case] + [case_score] + [Ncase] )
 		# update counter_byScore
 		if counter_min == 0:
@@ -287,7 +340,8 @@ def DataSet_Pickle_Train(dict_parameters, DataSet_preToken_Path, path_tokenizer,
 		# for this case, grab data
 		case_x, case_y, Ncase =folderList_grab_data(path_folderList=case_folderList, 
 													  trainOrtest='test/', 
-													  case_score=case_score)
+													  case_score=case_score,
+													  dict_dataset=dict_test)
 		print "number of cases of %s of score %i: %i" % tuple( [case] + [case_score] + [Ncase] )	
 		# update counter_byScore
 		if counter_min == 0:
@@ -352,12 +406,13 @@ def DataSet_Pickle_Train(dict_parameters, DataSet_preToken_Path, path_tokenizer,
 	return len(dictionary)
 
 
-
 """
 ########################################################################################
 """
 
-def DataSet_Pickle_Predict(dict_parameters, DataSet_preToken_Path, path_tokenizer, flag_truncate = True):
+def DataSet_Pickle_Predict(dict_parameters, DataSet_preToken_Path, path_tokenizer, 
+						   dict_dataset, 
+						   flag_truncate = True):
 	'''
 	DataSet_preToken_Path: '../Data/DataSet_Tokenize/'
 	path_tokenizer: './scripts/tokenizer/'
@@ -395,11 +450,13 @@ def DataSet_Pickle_Predict(dict_parameters, DataSet_preToken_Path, path_tokenize
 
 	# build dictionary
 	dictionary = build_dict(path_data=DataSet_preToken_Path, 
-							path_tokenizer=path_tokenizer, path_folderList=path_folderList_dict)
+							path_tokenizer=path_tokenizer, path_folderList=path_folderList_dict,
+							dict_train=dict_dataset
+							)
 
 	###############################################################################
 	# local function used to grab_data() from given list of folders
-	def folderList_grab_data(path_folderList, trainOrtest, case_score):
+	def folderList_grab_data(path_folderList, trainOrtest, case_score, dict_dataset):
 		'''
 		path_folderList: list of paths 
 		trainOrtest: 'train/' or 'test/'
@@ -408,18 +465,25 @@ def DataSet_Pickle_Predict(dict_parameters, DataSet_preToken_Path, path_tokenize
 		counter = 0
 		return_X_values = []
 		return_Y_values = []
+		fileNames_list = []
+		score_list = []
+
 		# go through path_folderList
 		for path_folder in path_folderList:
 			path_folder = trainOrtest + path_folder
 			
-			vari_X_values, fileNames_list = grab_data_fileName(path_data=DataSet_preToken_Path+path_folder, 
+			vari_X_values, fileNames_list_case, score_list_case = grab_data_fileName(path_data=DataSet_preToken_Path+path_folder, 
 									  path_tokenizer=path_tokenizer,
-									  dictionary=dictionary)
+									  dictionary=dictionary,
+									  dict_dataset=dict_dataset)
 			
 			return_X_values = return_X_values + vari_X_values
 			return_Y_values = return_Y_values + [case_score] * len(vari_X_values)
+			fileNames_list = fileNames_list + fileNames_list_case
+			score_list = score_list + score_list_case
 			counter += len(vari_X_values)
-		return return_X_values, return_Y_values, counter, fileNames_list
+
+		return return_X_values, return_Y_values, counter, fileNames_list, score_list
 
 	###############################################################################
 	
@@ -427,6 +491,7 @@ def DataSet_Pickle_Predict(dict_parameters, DataSet_preToken_Path, path_tokenize
 	X_value = []
 	Y_value = []
 	fileNames = []
+	scoreTuples = []
 	# lowest number of instances across all scores
 	counter_min = 0
 	# go through dict_parameters['Yvalue_list']
@@ -439,15 +504,17 @@ def DataSet_Pickle_Predict(dict_parameters, DataSet_preToken_Path, path_tokenize
 		case_score = dict_parameters[name_case_score]
 		
 		# for this case, grab data
-		case_x, case_y, Ncase, case_fileNames =folderList_grab_data(path_folderList=case_folderList, 
-													  				trainOrtest='', 
-													  				case_score=case_score)
+		case_x, case_y, Ncase, case_fileNames, case_scoreTuples =folderList_grab_data(path_folderList=case_folderList, 
+													  								  trainOrtest='', 
+													  								  case_score=case_score,
+													  								  dict_dataset=dict_dataset)
 		
 		print "number of cases of %s of score %i: %i" % tuple( [case] + [case_score] + [Ncase] )
 		# list of sentences
 		X_value = X_value + case_x
 		Y_value = Y_value + case_y
 		fileNames = fileNames + case_fileNames
+		scoreTuples = scoreTuples + case_scoreTuples
 
 	###############################################################################
 	# outputs
@@ -460,6 +527,8 @@ def DataSet_Pickle_Predict(dict_parameters, DataSet_preToken_Path, path_tokenize
 	pkl.dump((X_value, Y_value), f, -1)
 	# pickle fileNames
 	pkl.dump(fileNames, f, -1)
+	# pickle score_tuples
+	pkl.dump(scoreTuples, f, -1)
 	f.close()
 
 	# dictionary

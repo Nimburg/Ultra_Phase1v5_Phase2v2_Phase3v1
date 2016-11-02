@@ -10,6 +10,7 @@ import numpy
 import pandas as pd
 import csv
 import os
+import json
 
 import theano
 from theano import config
@@ -19,6 +20,9 @@ from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 # data preparation file
 import LSTM_DataPrep
 
+# predicting reloading
+from MarkedTag_Import import Load_Predictions
+
 
 """
 ####################################################################################
@@ -27,8 +31,6 @@ Public Variables and Functions
 
 ####################################################################################
 """
-
-# datasets = {'tweetText_tupleScores': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
 
 # Set the random number generators' seeds for consistency
 SEED = 123
@@ -76,15 +78,6 @@ def get_minibatches_idx(n, minibatch_size, shuffle=False):
 
 	return zip(range(len(minibatches)), minibatches)
 
-# call functions from LSTM_DataPrep
-# returns 2 functions
-def get_dataset(name):
-	'''
-	returns 2 functions
-	datasets = {'tweetText_tupleScores': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
-	'''
-	# return datasets[name][0], datasets[name][1]
-	return LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data
 
 def dropout_layer(state_before, use_noise, trng):
 	'''
@@ -595,6 +588,8 @@ Main Function
 def train_lstm(
 	dim_proj=256,  
 	# word embeding dimension and LSTM number of hidden units.
+	n_words=1000,  
+	# Vocabulary size
 	
 	patience=3,  # Number of epoch to wait before early stop if no progress
 	max_epochs=5000,  # The maximum number of epoch to run
@@ -602,38 +597,31 @@ def train_lstm(
 	decay_c=0.,  # Weight decay for the classifier applied to the U weights.
 	lrate=0.0001,  # Learning rate for sgd (not used for adadelta and rmsprop)
 	
-	n_words=1000,  
-	# Vocabulary size
-
-	optimizer=adadelta,  
+	optimizer='adadelta',  
 	# sgd, adadelta and rmsprop available, 
 	# sgd very hard to use, not recommanded (probably need momentum and decaying learning rate).
 	# optimizer's value is a function
-
 	encoder='lstm',  # TODO: can be removed must be lstm.
 	
 	saveto='lstm_model.npz',  
 	# The best model will be saved there
 	loadfrom = 'lstm_model.npz',
 	# load parameters from .npz files
-	
+	dataset='tweetText_tagScore.pkl',
+	# name of the data set; also name of the .pkl file
+	dataset_path="../Data/DataSet_Tokenize",
+
+	# path to the data set	
 	validFreq=200,  # Compute the validation error after this number of update.
 	saveFreq=200,  # Save the parameters after every saveFreq updates
 	maxlen=100,  # Sequence longer then this get ignored
 	batch_size=16,  # The batch size during training.
 	valid_batch_size=64,  # The batch size used for validation/test set.
-	
-	dataset='tweetText_tagScore.pkl',
-	# name of the data set; also name of the .pkl file
-	# datasets = {'Name?': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
-	dataset_path="../Data/DataSet_Tokenize",
-	# path to the data set
-
-	# Parameter for extra option
+						  # Parameter for extra option
 	noise_std=0.,
 	use_dropout=True,  # if False slightly faster, but worse test error
 					   # This frequently need a bigger model.
-	reload_model=None,  
+	reload_model=False,  
 	# Path to a saved model we want to start from.
 	test_size=-1,  # If >0, we keep only this number of test example.
 ):
@@ -642,9 +630,10 @@ def train_lstm(
 	# this will get all the varialbe:value from def train_lstm into a dict
 	model_options = locals().copy()
 	print("Initial model options", model_options)
-	# get data from dataset named as 'dataset'
-	# datasets = {'tweetText_tupleScores': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
-	load_data, prepare_data = get_dataset(dataset)
+	# functions of loading and preparing dataset
+	load_data =  LSTM_DataPrep.load_data
+	prepare_data = LSTM_DataPrep.prepare_data
+
 	print('Loading data')
 	# LSTM_DataPrep.load_data(dataset, path_dataset, n_words=60000, valid_portion=0.1, maxlen=None, 
 	# 						  sort_by_len=True)	
@@ -663,6 +652,11 @@ def train_lstm(
 	ydim = numpy.max(train[1]) + 1
 	model_options['ydim'] = ydim
 
+	# saving model_options to .json file
+	json_name = saveto[:-4] + '.json'
+	with open(json_name, 'w') as fp:
+		json.dump(model_options, fp, sort_keys=True, indent=4)
+
 	##################
 	# Building Model #
 	##################
@@ -671,9 +665,13 @@ def train_lstm(
 	# Dict name (string) -> numpy ndarray
 	params = init_params(model_options)
 	# loading previous parameters or not
-	if reload_model:
+	if reload_model == True:
 		# path = name.npz, in the save address as this code
-		load_params(path=loadfrom, params=params)
+		params = load_params(path=loadfrom, params=params)
+		json_name = saveto[:-4] + '_PredReload.json'
+		with open(json_name, 'w') as fp:
+			json.dump(model_options, fp, sort_keys=True, indent=4)
+
 	# This create Theano Shared Variable from the parameters.
 	# Dict name (string) -> Theano Tensor Shared Variable
 	# params and tparams have different copy of the weights.
@@ -700,6 +698,8 @@ def train_lstm(
 	lr = tensor.scalar(name='lr')
 	# sgd, adadelta and rmsprop available
 	# cost is a theano variable/function created at build_model(tparams, model_options)
+	if optimizer == 'adadelta':
+		optimizer=adadelta
 	f_grad_shared, f_update = optimizer(lr, tparams, grads, x, mask, y, cost)
 
 	##################
@@ -766,7 +766,9 @@ def train_lstm(
 						params = best_p
 					else:
 						params = unzip(tparams)
+					# saving model_options (hyper-parameters) only
 					numpy.savez(saveto, history_errs=history_errs, **params)
+					# saving model_options (hyper-parameters) only
 					pickle.dump(model_options, open('%s.pkl' % saveto, 'wb'), -1)
 					print('Done')
 
@@ -828,11 +830,10 @@ def train_lstm(
 	print( ('Training took %.1fs' %
 			(end_time - start_time)), file=sys.stderr)
 	
-
 	####################################################################################
 	# return dict() of model_options
 	print("Final model options", model_options)	
-	return model_options
+	return params
 
 """
 ####################################################################################
@@ -869,31 +870,67 @@ model options: {
 ####################################################################################
 """
 
-def load_predict_lstm(model_options, 
-					  dataset, dataset_path, 
-					  csv_fileName, csv_output_path):
+def load_predict_lstm(dataset, dataset_path, 
+					  loadfrom, 
+					  MySQL_DBkey,
+					  pred_columnName, sql_tableName, 
+					  params_direct=None,
+					  model_options=None):
+	'''
+	dataset: name of the data set; also name of the .pkl file
+	dataset_path: path to .pkl files
+				e.g. dataset_path="../Data/DataSet_Tokenize"
 
-	####################################################################################
+	pred_columnName: column name for prediction results on filtered_tweet_stack
+	sql_tableName: full table name of filtered_tweet_stack_'sth'
+
+	'''
+	
+	###############################
+	# load Model hyper-parameters #
+	###############################
+	
+	reload_model = True # naturally
+	# loading previous parameters or not
+	if reload_model == True :
+		# load model_options from .json file
+		model_options_fileName = loadfrom[:-4] + '.json'
+		with open(model_options_fileName, 'r') as fpr:
+			model_options = json.load(fpr)	
+		# saving reloaded model_options (hyper-parameters) to .json
+		json_name = loadfrom[:-4] + '_PredReload.json'
+		with open(json_name, 'w') as fpl:
+			json.dump(model_options, fpl, sort_keys=True, indent=4)
+		# load matrix parameters 
+		params = init_params(model_options)
+		params = load_params(path=loadfrom, params=params)
+
+	# directly from training
+	if params_direct is not None:
+		params = params_direct
+
 	# load model_options (dict) from train_lstm
 	n_words = model_options['n_words']	
 	maxlen = model_options['maxlen']
-	# parameter dict path
-	loadfrom = model_options['loadfrom']
 	# dataset path
 	dataset = dataset
 	dataset_path = dataset_path
 
-	reload_model = True # naturally
 	# size of each batch during prediction process
 	batch_size = model_options['batch_size']
 
 	####################################################################################
+	
+	#############
+	# load Data #
+	#############
+
 	# data prep functions
 	load_data = LSTM_DataPrep.load_data_for_prediction
 	prepare_data = LSTM_DataPrep.prepare_data
 
 	print('Loading data')
-	dataset4prediction = load_data(dataset=dataset, path_dataset=dataset_path, 
+	dataset4prediction, fileNames, scores_tag = load_data(dataset=dataset, path_dataset=dataset_path, 
 								   n_words=n_words, maxlen=maxlen)
 
 	# dataset4prediction[1] gives the 2nd value in the tuple: train_set_y, which is a list of Y values
@@ -910,11 +947,7 @@ def load_predict_lstm(model_options,
 	# Building Model #
 	##################
 	print('Building model')
-	# This create the initial parameters as numpy ndarrays.
-	params = init_params(model_options)
-	# loading previous parameters or not
-	if reload_model:
-		load_params(path=loadfrom, params=params)
+
 	# This create Theano Shared Variable from the parameters.
 	tparams = init_tparams(params)
 	
@@ -977,15 +1010,13 @@ def load_predict_lstm(model_options,
 
 			# load into dataset_preds_prob and dataset_preds
 			if len(dataset_preds_prob) == 0 or len(dataset_preds) == 0:
-				dataset_sentences_digit = X_values
+				# initialized
 				dataset_preds_prob = preds_prob
 				dataset_preds = preds
 			else:
-				dataset_sentences_digit = numpy.append(dataset_sentences_digit, X_values, 
+				dataset_preds_prob = numpy.concatenate( (dataset_preds_prob, preds_prob), 
 												  axis=0)
-				dataset_preds_prob = numpy.append(dataset_preds_prob, preds_prob, 
-												  axis=0)
-				dataset_preds = numpy.append(dataset_preds, preds, 
+				dataset_preds = numpy.concatenate( (dataset_preds, preds), 
 												  axis=0)
 	except KeyboardInterrupt:
 		print("Prediction interupted")
@@ -993,29 +1024,24 @@ def load_predict_lstm(model_options,
 
 	####################################################################################
 	
-	###################
-	# digits to words #
-	###################
+	#####################################
+	# Read, Expand and Load MySQL table #
+	#####################################
+	
+	# tuple with lists or numpy.arrays as elements
+	print("\n\nlengthes: ", len(fileNames), len(scores_tag), len(dataset_preds_prob), len(dataset_preds) )
+	fileName_Scores_tuple = ( fileNames, scores_tag )
+	print("Start Loading %s into %s" % tuple( [pred_columnName]+[sql_tableName])
+		 )
+	predictions_tuple = ( dataset_preds_prob, dataset_preds)
 
+	Load_Predictions(MySQL_DBkey=MySQL_DBkey,
+					 pred_columnName=pred_columnName, sql_tableName=sql_tableName, 
+					 fileName_Scores_tuple=fileName_Scores_tuple, predictions_tuple=predictions_tuple
+					 )
 
-
-
-
-
-
-
-
-	########################
-	# concatenate and save #
-	########################
-
-
-
-
-
-
-
-
+	####################################################################################
+	return None
 
 
 """
@@ -1027,6 +1053,11 @@ Test Codes
 """
 
 if __name__ == '__main__':
+	
+	####################################################################
+
+	# MySQL_DBkey = {'host':'localhost', 'user':'sa', 'password':'fanyu01', 'db':'ultrajuly_p1v5_p2v2','charset':'utf8mb4'}
+	MySQL_DBkey = {'host':'localhost', 'user':'sa', 'password':'fanyu01', 'db':'ultrajuly_p1v5_p2v2','charset':'utf8'}
 
 	####################################################################################
 	dict_tokenizeParameters_trainAgainst_trump = {
@@ -1082,103 +1113,143 @@ if __name__ == '__main__':
 		
 		'trump_score':2,
 		'hillary_score':0,
-		'neutral_score':1,
+		'neutral_score':1
 		}
+	
+	####################################################################
+	# training
+	flag_training = True  
+	dict_training = dict_tokenizeParameters_trainAgainst_trump
 
-	####################################################################################
-	para_dataset = dict_tokenizeParameters_trainAgainst_trump['dataset'] + '.pkl'
-	para_dataset_path = dict_tokenizeParameters_trainAgainst_trump['dataset_path']
+	####################################################################
+	# predicting
+	flag_predicting = True 
+	
+	pred_columnName = 'TA_trump_P1N0'
+	sql_tableName = 'filtered_tweet_stack_testpredict'
 
-	para_n_words = 3000
-	dim_proj = 1024
+	path_preToken_Predicting = '../Data/DataSet_Predicting/'
 
-	para_saveto = dict_tokenizeParameters_trainAgainst_trump['lstm_saveto']
-	para_saveto = para_saveto + '_Nwords_' + str(para_n_words)
-	para_saveto = para_saveto + '_dimProj_' + str(dim_proj)
-	para_saveto = para_saveto + '.npz'
-
-	para_loadfrom = para_saveto
-
-	model_options = train_lstm(
-		max_epochs=100,
-		patience=1, # Number of epoch to wait before early stop if no progress
-		saveFreq=200,
-		validFreq=200,
-		test_size=-1, 
-		# If >0, we keep only this number of test example.
+	dict_tokenizeParameters_trainAgainst_ = {
+		'dataset':'trainAgainst_trump', 
+		# PLUS .pkl or dict.pkl for LSTM
+		'dataset_path': '../Data/DataSet_Predicting/',
+		'tokenizer_path': './scripts/tokenizer/',
+		# same for all cases
+		'lstm_saveto': 'lstm_TA_trump_Nwords_3000_dimProj_1024',
+		'lstm_loadfrom':'lstm_TA_trump_Nwords_3000_dimProj_1024',
+		# LSTM model parameter save/load
+		'Yvalue_list':['posi', 'neg'],
+		# root name for cases to be considered
+		'posi_folder':['posi_neut', 'posi_neg'],
+		'neg_folder':['neg_posi', 'neg_neut', 'neg_neg'],
 		
-		dim_proj=dim_proj, # word embeding dimension and LSTM number of hidden units.
-		n_words=para_n_words, # Vocabulary size
+		'posi_score':1,
+		'neg_score':0
+		}
+	dict_predicting = dict_tokenizeParameters_trainAgainst_
+	
+	####################################################################
+	# for training !!!
+	if flag_training == True:
+
+		para_dataset = dict_training['dataset'] + '.pkl'
+		para_dataset_path = dict_training['dataset_path']
+
+		para_n_words = 3000
+		dim_proj = 1024
+
+		para_saveto = dict_training['lstm_saveto']
+		para_saveto = para_saveto + '_Nwords_' + str(para_n_words)
+		para_saveto = para_saveto + '_dimProj_' + str(dim_proj)
+		para_saveto = para_saveto + '.npz'
+
+		para_loadfrom = para_saveto
+
+		params = train_lstm(
+			max_epochs=100,
+			patience=1, # Number of epoch to wait before early stop if no progress
+			saveFreq=200,
+			validFreq=200,
+			test_size=-1, 
+			# If >0, we keep only this number of test example.
+			
+			dim_proj=dim_proj, # word embeding dimension and LSTM number of hidden units.
+			n_words=para_n_words, # Vocabulary size
+			
+			dataset=para_dataset,
+			# name of the data set, 'sth.pkl'; also name of the .pkl file
+			# datasets = {'Name?': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
+			dataset_path=para_dataset_path,
+			# path to the data set
+
+			saveto=para_saveto,
+			loadfrom = para_loadfrom,
+			reload_model=False  # whether reload revious parameter or not
+			)
+
+	####################################################################
+	# for predicting !!!
+	if flag_predicting == True:
+
+		####################################################################
+		# setting path for .txt files
+		dict_predicting['dataset_path'] = path_preToken_Predicting
+
+		# setting correct 9 folders to the class with highest Y-value
+		full_folder_list = ['posi_posi', 'posi_neut', 'posi_neg',
+							'neut_posi', 'neut_neut', 'neut_neg',
+							'neg_posi', 'neg_neut', 'neg_neg']
+		# thus passing the Y-value_max into LSTM
+		# and setting all other folders to [], avoiding overlapping data
+
+		####################################################################
+		# parameters of train_lstm()
+		para_dataset = dict_predicting['dataset'] + '.pkl'
+		para_dataset_path = dict_predicting['dataset_path']
 		
-		dataset=para_dataset,
-		# name of the data set, 'sth.pkl'; also name of the .pkl file
-		# datasets = {'Name?': (LSTM_DataPrep.load_data, LSTM_DataPrep.prepare_data)}
-		dataset_path=para_dataset_path,
-		# path to the data set
+		para_loadfrom = dict_predicting['lstm_loadfrom']
+		para_loadfrom = para_loadfrom + '.npz' 
 
-		saveto=para_saveto,
-		loadfrom = para_loadfrom,
-		reload_model=None # whether reload revious parameter or not
-		)
+		####################################################################
+		load_predict_lstm(dataset=para_dataset, 
+						  dataset_path=para_dataset_path, 
+						  loadfrom=para_loadfrom,
+					  	  MySQL_DBkey=MySQL_DBkey,
+					  	  pred_columnName=pred_columnName, 
+					  	  sql_tableName=sql_tableName, 
+					  	  params_direct=params, 
+					  	  model_options=None)
 
-	'''
-	load_predict_lstm(model_options=model_options, 
-					  dataset=, 
-					  dataset_path=, 
-					  csv_fileName=,
-					  csv_output_path=
-					  )
 
-	'''
+
+
+
+
+
+
 
 '''
 ####################################################################################
 dict_tokenizeParameters_trainAgainst_trump
 
-2209 train examples
-116 valid examples
-508 test examples
+2320 train examples
+122 valid examples
+629 test examples
 
 para_n_words = 3000
 dim_proj = 1024
 
-Epoch  1 Update  200 Cost  0.174786254764
-('Train ', 0.12132186509732912, 'Valid ', 0.18103448275862066, 'Test ', 0.13582677165354329)
-Epoch  2 Update  400 Cost  0.0620853416622
-('Train ', 0.011317338162064261, 'Valid ', 0.077586206896551713, 'Test ', 0.041338582677165392)
-Epoch  5 Update  800 Cost  0.00141490995884
-('Train ', 0.0018107741059303351, 'Valid ', 0.10344827586206895, 'Test ', 0.043307086614173262)
+Epoch  2 Update  400 Cost  0.146087661386
+('Train ', 0.015948275862068928, 'Valid ', 0.040983606557377095, 'Test ', 0.031796502384737635)
+Epoch  4 Update  600 Cost  0.0068545867689
+('Train ', 0.0047413793103447954, 'Valid ', 0.032786885245901676, 'Test ', 0.036565977742448297)
+Epoch  6 Update  1000 Cost  0.00123703246936
+('Train ', 0.0, 'Valid ', 0.032786885245901676, 'Test ', 0.02861685214626386)
 Early Stop!
-Seen 1680 samples
-Train  0.0113173381621 Valid  0.0775862068966 Test  0.0413385826772
-The code run for 6 epochs, with 40.623833 sec/epochsTraining took 243.7s
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Seen 640 samples
+Train  0.0 Valid  0.0327868852459 Test  0.0286168521463
+The code run for 9 epochs, with 42.178444 sec/epochsTraining took 379.6s
 
 
 
@@ -1186,44 +1257,6 @@ The code run for 6 epochs, with 40.623833 sec/epochsTraining took 243.7s
 
 
 '''
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
