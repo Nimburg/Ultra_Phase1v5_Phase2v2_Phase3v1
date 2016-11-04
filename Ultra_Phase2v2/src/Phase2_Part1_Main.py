@@ -81,34 +81,34 @@ from Tokenize_Main import Tokenize_Main
 
 # variable type check
 def check_args(*types):
-    def real_decorator(func):
-        def wrapper(*args, **kwargs):
-            for val, typ in zip(args, types):
-                assert isinstance(val, typ), "Value {} is not of expected type {}".format(val, typ)
-            return func(*args, **kwargs)
-        return wrapper
-    return real_decorator
+	def real_decorator(func):
+		def wrapper(*args, **kwargs):
+			for val, typ in zip(args, types):
+				assert isinstance(val, typ), "Value {} is not of expected type {}".format(val, typ)
+			return func(*args, **kwargs)
+		return wrapper
+	return real_decorator
 
 # check each line from readline(), check length, start/end character
 @check_args(str, int)
 def Json_format_check(input_str, index_line):
-    # check tweet_line, which should at least be "{}"
-    fflag_line = True
-    if len(input_str) <= 2:
-        fflag_line = False
-    # check if tweet_line is complete
-    fflag_json = False
-    if fflag_line and input_str[0:1] == '{':
-        if input_str[-2:-1] == '}' or input_str[-1:] == '}': # last line has no '\n'
-            fflag_json = True
-    else:
-        print "Line: {}, Incomplete or Empty Line".format(index_line)
-    return fflag_line, fflag_json
+	# check tweet_line, which should at least be "{}"
+	fflag_line = True
+	if len(input_str) <= 2:
+		fflag_line = False
+	# check if tweet_line is complete
+	fflag_json = False
+	if fflag_line and input_str[0:1] == '{':
+		if input_str[-2:-1] == '}' or input_str[-1:] == '}': # last line has no '\n'
+			fflag_json = True
+	else:
+		print "Line: {}, Incomplete or Empty Line".format(index_line)
+	return fflag_line, fflag_json
 
 # single input pd.timestamp
 @check_args(pd.tslib.Timestamp)
 def pd_timestamp_check(input):
-    return True
+	return True
 
 """
 ####################################################################
@@ -119,38 +119,38 @@ Set up SQL in-RAM table variables
 """
 
 def Set_TempTable_Variables(MySQL_DBkey, N_GB):
-    """ 
-        Parameters
-        ----------
-        Returns
-        -------
-    """ 
-    ####################################################################
-    # Connect to the database
-    connection = pymysql.connect(host=MySQL_DBkey['host'],
-                                 user=MySQL_DBkey['user'],
-                                 password=MySQL_DBkey['password'],
-                                 db=MySQL_DBkey['db'],
-                                 charset=MySQL_DBkey['charset'],
-                                 cursorclass=pymysql.cursors.DictCursor)
+	""" 
+		Parameters
+		----------
+		Returns
+		-------
+	"""	
+	####################################################################
+	# Connect to the database
+	connection = pymysql.connect(host=MySQL_DBkey['host'],
+								 user=MySQL_DBkey['user'],
+								 password=MySQL_DBkey['password'],
+								 db=MySQL_DBkey['db'],
+								 charset=MySQL_DBkey['charset'],
+								 cursorclass=pymysql.cursors.DictCursor)
 
-    ####################################################################
-    comd_set_temptable = """
+	####################################################################
+	comd_set_temptable = """
 SET GLOBAL tmp_table_size = 1024 * 1024 * 1024 * %i;
 SET GLOBAL max_heap_table_size = 1024 * 1024 * 1024 * %i;
 """
-    # execute Initialize Table commands
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute( comd_set_temptable % (N_GB, N_GB) )
-        # commit commands
-        print "Temp table size set for 1024 * 1024 * 1024 * %i" % N_GB
-        connection.commit()
-    finally:
-        pass
-    connection.close()
-    ####################################################################
-    return None
+	# execute Initialize Table commands
+	try:
+		with connection.cursor() as cursor:
+			cursor.execute( comd_set_temptable % (N_GB, N_GB) )
+		# commit commands
+		print "Temp table size set for 1024 * 1024 * 1024 * %i" % N_GB
+		connection.commit()
+	finally:
+		pass
+	connection.close()
+	####################################################################
+	return None
 
 """
 ####################################################################
@@ -161,66 +161,66 @@ Main Function of Phase2_Part1
 """
 
 def Pahse2_Part1_Main(file_name_list, MySQL_DBkey,
-                      path_DataSet_training, path_tokenizer, ratio_train_test, 
-                      size_dataset, thre_nonTagWords,
-                      list_dict_tokenizeParameters, 
-                      flag_trainOrpredict, flag_ridTags, flag_NeutralFiles, predict_Name=None):
-    '''
-        Phase2 Part1 Main Function
-        tokenization and related
+					  path_DataSet_training, path_tokenizer, ratio_train_test, 
+					  size_dataset, thre_nonTagWords,
+					  list_dict_tokenizeParameters, 
+					  flag_trainOrpredict, flag_ridTags, flag_NeutralFiles, predict_Name=None):
+	'''
+		Phase2 Part1 Main Function
+		tokenization and related
 
-        Parameters
-        ----------
-        size_dataset: total number of tweets for tokenize
-        ratio_train_test: ratio of train/test
-        thre_nonTagWords: the threshold for number of non-tag words, 
-                          above which a tweet is selected for tokenize
-        Returns
-        -------
-    '''
+		Parameters
+		----------
+		size_dataset: total number of tweets for tokenize
+		ratio_train_test: ratio of train/test
+		thre_nonTagWords: the threshold for number of non-tag words, 
+						  above which a tweet is selected for tokenize
+		Returns
+		-------
+	'''
 
-    # set in-RAM table size
-    Set_TempTable_Variables(MySQL_DBkey = MySQL_DBkey, N_GB = 4)
+	# set in-RAM table size
+	Set_TempTable_Variables(MySQL_DBkey = MySQL_DBkey, N_GB = 4)
 
-    ####################################################################
+	####################################################################
 
-    # Connect to the database
-    connection = pymysql.connect(host=MySQL_DBkey['host'],
-                                 user=MySQL_DBkey['user'],
-                                 password=MySQL_DBkey['password'],
-                                 db=MySQL_DBkey['db'],
-                                 charset=MySQL_DBkey['charset'],
-                                 cursorclass=pymysql.cursors.DictCursor)
+	# Connect to the database
+	connection = pymysql.connect(host=MySQL_DBkey['host'],
+								 user=MySQL_DBkey['user'],
+								 password=MySQL_DBkey['password'],
+								 db=MySQL_DBkey['db'],
+								 charset=MySQL_DBkey['charset'],
+								 cursorclass=pymysql.cursors.DictCursor)
 
-    ####################################################################
-    # This is for EITHER training OR predicting LSTM purposes !!!
+	####################################################################
+	# This is for EITHER training OR predicting LSTM purposes !!!
 
-    # create MarkedTags_dict from .csv
-    MarkedTags_dict = MarkedTag_Import(file_name_list=file_name_list)
-    
-    if flag_trainOrpredict == True: 
-        SQL_tableName = "training"
-    if flag_trainOrpredict == False and predict_Name is not None: 
-        SQL_tableName = predict_Name
+	# create MarkedTags_dict from .csv
+	MarkedTags_dict = MarkedTag_Import(file_name_list=file_name_list)
+	
+	if flag_trainOrpredict == True: 
+		SQL_tableName = "training"
+	if flag_trainOrpredict == False and predict_Name is not None: 
+		SQL_tableName = predict_Name
 
-    # extract all tweets from tweet_stack which contains key_tags
-    # using MarkedTags_dict to create
-    dict_train, dict_test = TextExtract_byTags(connection=connection, MarkedTags_dict=MarkedTags_dict, 
-                                               path_save=path_DataSet_training, flag_trainOrpredict=flag_trainOrpredict, # training LSTM
-                                               ratio_train_test=ratio_train_test, size_dataset=size_dataset, 
-                                               thre_nonTagWords=thre_nonTagWords, 
-                                               flag_ridTags=flag_ridTags, flag_NeutralFiles=flag_NeutralFiles, 
-                                               SQL_tableName=SQL_tableName)
-    
-    # tokenization
-    for dict_case in list_dict_tokenizeParameters: 
-        dict_case['N_uniqueWords'] = Tokenize_Main(dict_parameters = dict_case, 
-                                                   flag_trainOrpredict=flag_trainOrpredict,
-                                                   dict_train=dict_train, dict_test=dict_test)
-        print dict_case
+	# extract all tweets from tweet_stack which contains key_tags
+	# using MarkedTags_dict to create
+	dict_train, dict_test = TextExtract_byTags(connection=connection, MarkedTags_dict=MarkedTags_dict, 
+											   path_save=path_DataSet_training, flag_trainOrpredict=flag_trainOrpredict, # training LSTM
+											   ratio_train_test=ratio_train_test, size_dataset=size_dataset, 
+											   thre_nonTagWords=thre_nonTagWords, 
+											   flag_ridTags=flag_ridTags, flag_NeutralFiles=flag_NeutralFiles, 
+											   SQL_tableName=SQL_tableName)
+	
+	# tokenization
+	for dict_case in list_dict_tokenizeParameters: 
+		dict_case['N_uniqueWords'] = Tokenize_Main(dict_parameters = dict_case, 
+												   flag_trainOrpredict=flag_trainOrpredict,
+												   dict_train=dict_train, dict_test=dict_test)
+		print dict_case
 
-    ####################################################################
-    return None
+	####################################################################
+	return None
 
 
 """
@@ -233,147 +233,221 @@ def Pahse2_Part1_Main(file_name_list, MySQL_DBkey,
 
 if __name__ == "__main__":
 
-    ####################################################################
+	####################################################################
 
-    # MySQL_DBkey = {'host':'localhost', 'user':'sa', 'password':'fanyu01', 'db':'ultrajuly_p1v5_p2v2','charset':'utf8mb4'}
-    MySQL_DBkey = {'host':'localhost', 'user':'sa', 'password':'fanyu01', 'db':'ultrajuly_p1v5_p2v2','charset':'utf8'}
+	# MySQL_DBkey = {'host':'localhost', 'user':'sa', 'password':'fanyu01', 'db':'ultrajuly_p1v5_p2v2','charset':'utf8mb4'}
+	MySQL_DBkey = {'host':'localhost', 'user':'sa', 'password':'fanyu01', 'db':'ultrajuly_p1v5_p2v2','charset':'utf8'}
 
-    keyword1 = 'trump'
-    keyword2 = 'hillary'
+	keyword1 = 'trump'
+	keyword2 = 'hillary'
 
-    ####################################################################
-    # dict_parameters for training
+	####################################################################
+	# dict_parameters for training
 
-    dict_tokenizeParameters_trainAgainst_trump = {
-        'dataset':'trainAgainst_trump', 
-        # PLUS .pkl or dict.pkl for LSTM
-        'dataset_path': '../Data/DataSet_Training/',
-        'tokenizer_path': './scripts/tokenizer/',
-        # same for all cases
-        'lstm_saveto': 'lstm_model_trainAgainst_trump.npz',
-        'lstm_loadfrom':'lstm_model_trainAgainst_trump.npz',
-        # LSTM model parameter save/load
-        'Yvalue_list':['posi_trump', 'neg_trump'],
-        # root name for cases to be considered
-        'posi_trump_folder':['posi_neut', 'posi_neg'],
-        'neg_trump_folder':['neg_posi', 'neg_neut', 'neg_neg'],
-        
-        'posi_trump_score':1,
-        'neg_trump_score':0
-        }
+	dict_tokenizeParameters_trainAgainst_trump = {
+		'dataset':'trainAgainst_trump', 
+		# PLUS .pkl or dict.pkl for LSTM
+		'dataset_path': '../Data/DataSet_Training/',
+		'tokenizer_path': './scripts/tokenizer/',
+		# same for all cases
+		'lstm_saveto': 'lstm_model_trainAgainst_trump.npz',
+		'lstm_loadfrom':'lstm_model_trainAgainst_trump.npz',
+		# LSTM model parameter save/load
+		'Yvalue_list':['posi_trump', 'neg_trump'],
+		# root name for cases to be considered
+		'posi_trump_folder':['posi_neut', 'posi_neg'],
+		'neg_trump_folder':['neg_posi', 'neg_neut', 'neg_neg'],
+		
+		'posi_trump_score':1,
+		'neg_trump_score':0
+		}
 
-    dict_tokenizeParameters_trainAgainst_hillary = {
-        'dataset':'trainAgainst_hillary', 
-        # PLUS .pkl or dict.pkl for LSTM
-        'dataset_path': '../Data/DataSet_Training/',
-        'tokenizer_path': './scripts/tokenizer/',
-        # same for all cases
-        'lstm_saveto': 'lstm_model_trainAgainst_trump.npz',
-        'lstm_loadfrom':'lstm_model_trainAgainst_trump.npz',
-        # LSTM model parameter save/load
-        'Yvalue_list':['posi_hillary', 'neg_hillary'],
-        # root name for cases to be considered
-        'posi_hillary_folder':['neut_posi', 'neg_posi'],
-        'neg_hillary_folder':['posi_neg', 'neut_neg', 'neg_neg'],
-        
-        'posi_hillary_score':1,
-        'neg_hillary_score':0
-        }
+	dict_tokenizeParameters_trainAgainst_hillary = {
+		'dataset':'trainAgainst_hillary', 
+		# PLUS .pkl or dict.pkl for LSTM
+		'dataset_path': '../Data/DataSet_Training/',
+		'tokenizer_path': './scripts/tokenizer/',
+		# same for all cases
+		'lstm_saveto': 'lstm_model_trainAgainst_hillar.npz',
+		'lstm_loadfrom':'lstm_model_trainAgainst_hillar.npz',
+		# LSTM model parameter save/load
+		'Yvalue_list':['posi_hillary', 'neg_hillary'],
+		# root name for cases to be considered
+		'posi_hillary_folder':['neut_posi', 'neg_posi'],
+		'neg_hillary_folder':['posi_neg', 'neut_neg', 'neg_neg'],
+		
+		'posi_hillary_score':1,
+		'neg_hillary_score':0
+		}
 
-    dict_tokenizeParameters_trainAgainst_trumphillary = {
-        'dataset':'trainAgainst_trumphillary', 
-        # PLUS .pkl or dict.pkl for LSTM
-        'dataset_path': '../Data/DataSet_Training/',
-        'tokenizer_path': './scripts/tokenizer/',
-        # same for all cases
-        'lstm_saveto': 'lstm_model_trainAgainst_trump.npz',
-        'lstm_loadfrom':'lstm_model_trainAgainst_trump.npz',
-        # LSTM model parameter save/load
-        'Yvalue_list':['trump', 'hillary', 'neutral'],
-        # root name for cases to be considered
-        'trump_folder':['posi_neut', 'posi_neg'],
-        'hillary_folder':['neut_posi', 'neg_posi'],
-        'neutral_folder':['neg_neg'],
-        
-        'trump_score':2,
-        'hillary_score':0,
-        'neutral_score':1,
-        }
+	dict_tokenizeParameters_trainAgainst_trumphillary = {
+		'dataset':'trainAgainst_trumphillary', 
+		# PLUS .pkl or dict.pkl for LSTM
+		'dataset_path': '../Data/DataSet_Training/',
+		'tokenizer_path': './scripts/tokenizer/',
+		# same for all cases
+		'lstm_saveto': 'lstm_model_trainAgainst_trumphillar.npz',
+		'lstm_loadfrom':'lstm_model_trainAgainst_trumphillar.npz',
+		# LSTM model parameter save/load
+		'Yvalue_list':['trump', 'hillary', 'neutral'],
+		# root name for cases to be considered
+		'trump_folder':['posi_neut', 'posi_neg'],
+		'hillary_folder':['neut_posi', 'neg_posi'],
+		'neutral_folder':['neg_neg', 'neut_neg', 'neg_neut', 'neut_neut'],
+		
+		'trump_score':2,
+		'hillary_score':0,
+		'neutral_score':1,
+		}
 
-    ####################################################################
-    path_tokenizer = './scripts/tokenizer/'
-    
-    # training
-    path_preToken_Training = '../Data/DataSet_Training/'
-    file_name_list_training = ['MarkedTag_keyword1.csv','MarkedTag_keyword2.csv']   
-    flag_training = False  
+	####################################################################
+	path_tokenizer = './scripts/tokenizer/'
+	
+	# training
+	path_preToken_Training = '../Data/DataSet_Training/'
+	file_name_list_training = ['MarkedTag_keyword1.csv','MarkedTag_keyword2.csv']	
+	flag_training = False 
 
-    # predicting
-    path_preToken_Predicting = '../Data/DataSet_Predicting/'
-    file_name_list_predicting = ['MarkedTag_keyword1.csv','MarkedTag_keyword2.csv']
-    predict_Name = "testPredict"
-    flag_predicting = True  
+	# predicting
+	path_preToken_Predicting = '../Data/DataSet_Predicting/'
+	file_name_list_predicting = ['MarkedTag_keyword1.csv','MarkedTag_keyword2.csv']
+	predict_Name = "Nword5000_Dim1024"
+	flag_predicting = True 
 
-    ####################################################################
-    # for training !!!
-    if flag_training == True:
+	####################################################################
+	# for training !!!
+	if flag_training == True:
 
-        dict_tokenizeParameters_trainAgainst_trump['dataset_path'] = path_preToken_Training
-        dict_tokenizeParameters_trainAgainst_hillary['dataset_path'] = path_preToken_Training
-        dict_tokenizeParameters_trainAgainst_trumphillary['dataset_path'] = path_preToken_Training
+		dict_tokenizeParameters_trainAgainst_trump['dataset_path'] = path_preToken_Training
+		dict_tokenizeParameters_trainAgainst_hillary['dataset_path'] = path_preToken_Training
+		dict_tokenizeParameters_trainAgainst_trumphillary['dataset_path'] = path_preToken_Training
 
-        # load into list_dict_tokenizeParameters
-        list_dict_tokenizeParameters = [dict_tokenizeParameters_trainAgainst_trump,
-                                        dict_tokenizeParameters_trainAgainst_hillary,
-                                        dict_tokenizeParameters_trainAgainst_trumphillary]
+		# load into list_dict_tokenizeParameters
+		list_dict_tokenizeParameters = [dict_tokenizeParameters_trainAgainst_trump,
+										dict_tokenizeParameters_trainAgainst_hillary,
+										dict_tokenizeParameters_trainAgainst_trumphillary]
 
-        Pahse2_Part1_Main(file_name_list=file_name_list_training, MySQL_DBkey=MySQL_DBkey, 
-                          path_DataSet_training=path_preToken_Training, path_tokenizer=path_tokenizer,
-                          ratio_train_test=0.8, 
-                          size_dataset=None, # total number of tweets for tokenize
-                          thre_nonTagWords=10, 
-                          # the threshold for number of non-tag words, 
-                          # above which a tweet is selected for tokenize
-                          list_dict_tokenizeParameters=list_dict_tokenizeParameters,
-                          # list of dicts 
-                          # each dict contains parameters for tokenization for specific cases
-                          # related to corresponding LSTM training
-                          flag_trainOrpredict=True, # training
-                          flag_ridTags=False , flag_NeutralFiles=True 
-                          )
-    
-    ####################################################################
-    # for predicting !!!
-    if flag_predicting == True:
+		Pahse2_Part1_Main(file_name_list=file_name_list_training, MySQL_DBkey=MySQL_DBkey, 
+						  path_DataSet_training=path_preToken_Training, path_tokenizer=path_tokenizer,
+						  ratio_train_test=0.8, 
+						  size_dataset=None, # total number of tweets for tokenize
+						  thre_nonTagWords=10, 
+						  # the threshold for number of non-tag words, 
+						  # above which a tweet is selected for tokenize
+						  list_dict_tokenizeParameters=list_dict_tokenizeParameters,
+						  # list of dicts 
+						  # each dict contains parameters for tokenization for specific cases
+						  # related to corresponding LSTM training
+						  flag_trainOrpredict=True, # training
+						  flag_ridTags=False , flag_NeutralFiles=True 
+						  )
+	
+	####################################################################
+	# for predicting !!!
+	if flag_predicting == True:
 
-        # setting path for .txt files
-        dict_tokenizeParameters_trainAgainst_trump['dataset_path'] = path_preToken_Predicting
+		# setting path for .txt files
+		dict_tokenizeParameters_trainAgainst_trump['dataset_path'] = path_preToken_Predicting
+		dict_tokenizeParameters_trainAgainst_hillary['dataset_path'] = path_preToken_Predicting
+		dict_tokenizeParameters_trainAgainst_trumphillary['dataset_path'] = path_preToken_Predicting
 
-        # setting correct 9 folders to the class with highest Y-value
-        full_folder_list = ['posi_posi', 'posi_neut', 'posi_neg',
-                            'neut_posi', 'neut_neut', 'neut_neg',
-                            'neg_posi', 'neg_neut', 'neg_neg']
-        # thus passing the Y-value_max into LSTM
-        # and setting all other folders to [], avoiding overlapping data
-        # dict_tokenizeParameters_trainAgainst_trump['posi_trump_folder'] = full_folder_list
-        # dict_tokenizeParameters_trainAgainst_trump['neg_trump_folder'] = []
+		# setting correct 9 folders to the class with highest Y-value
+		full_folder_list = ['posi_posi', 'posi_neut', 'posi_neg',
+							'neut_posi', 'neut_neut', 'neut_neg',
+							'neg_posi', 'neg_neut', 'neg_neg']
+		# thus passing the Y-value_max into LSTM
+		# and setting all other folders to [], avoiding overlapping data
+		# dict_tokenizeParameters_trainAgainst_trump['posi_trump_folder'] = full_folder_list
+		# dict_tokenizeParameters_trainAgainst_trump['neg_trump_folder'] = []
 
-        # load into list_dict_tokenizeParameters
-        list_dict_tokenizeParameters = [dict_tokenizeParameters_trainAgainst_trump]
+		# load into list_dict_tokenizeParameters
+		list_dict_tokenizeParameters = [dict_tokenizeParameters_trainAgainst_trump,
+										dict_tokenizeParameters_trainAgainst_hillary,
+										dict_tokenizeParameters_trainAgainst_trumphillary]
 
-        Pahse2_Part1_Main(file_name_list=file_name_list_predicting, MySQL_DBkey=MySQL_DBkey, 
-                          path_DataSet_training=path_preToken_Predicting, path_tokenizer=path_tokenizer,
-                          ratio_train_test=0.8, 
-                          size_dataset=None, # total number of tweets for tokenize
-                          thre_nonTagWords=10, 
-                          # the threshold for number of non-tag words, 
-                          # above which a tweet is selected for tokenize
-                          list_dict_tokenizeParameters=list_dict_tokenizeParameters,
-                          predict_Name=predict_Name,
-                          # list of dicts 
-                          # each dict contains parameters for tokenization for specific cases
-                          # related to corresponding LSTM training
-                          flag_trainOrpredict=False, 
-                          flag_ridTags=True , flag_NeutralFiles=True 
-                          )
+		Pahse2_Part1_Main(file_name_list=file_name_list_predicting, MySQL_DBkey=MySQL_DBkey, 
+						  path_DataSet_training=path_preToken_Predicting, path_tokenizer=path_tokenizer,
+						  ratio_train_test=0.8, 
+						  size_dataset=None, # total number of tweets for tokenize
+						  thre_nonTagWords=10, 
+						  # the threshold for number of non-tag words, 
+						  # above which a tweet is selected for tokenize
+						  list_dict_tokenizeParameters=list_dict_tokenizeParameters,
+						  predict_Name=predict_Name,
+						  # list of dicts 
+						  # each dict contains parameters for tokenization for specific cases
+						  # related to corresponding LSTM training
+						  flag_trainOrpredict=False, 
+						  flag_ridTags=False , flag_NeutralFiles=True 
+						  )
+
+
+
+'''
+####################################################################
+
+without truncate on training data set; dataset biased; 
+
+total number of tweets extracted: 21245
+total number of tweets scored and past tweetText filter: 14773
+
+the ratio of train/test is: 0.800000
+dict_train check: key: neg_posi N_sentences: 421
+dict_train check: key: neut_posi N_sentences: 1606
+dict_train check: key: neg_neg N_sentences: 391
+dict_train check: key: neut_neg N_sentences: 4459
+dict_train check: key: posi_posi N_sentences: 62
+dict_train check: key: neg_neut N_sentences: 993
+dict_train check: key: neut_neut N_sentences: 165
+dict_train check: key: posi_neg N_sentences: 1560
+dict_train check: key: posi_neut N_sentences: 2162
+dict_test check: key: neg_posi N_sentences: 101
+dict_test check: key: neut_posi N_sentences: 384
+dict_test check: key: neg_neg N_sentences: 90
+dict_test check: key: neut_neg N_sentences: 1179
+dict_test check: key: posi_posi N_sentences: 18
+dict_test check: key: neg_neut N_sentences: 236
+dict_test check: key: neut_neut N_sentences: 53
+dict_test check: key: posi_neg N_sentences: 419
+dict_test check: key: posi_neut N_sentences: 474
+
+
+Number of sentences after tokenize: 5527
+Building dictionary..
+78525  total words  10228  unique words
+
+number of cases of posi_trump of score 1: 3722
+number of cases of neg_trump of score 0: 1805
+size of training set X&Y: 5527, 5527
+number of cases of posi_trump of score 1: 893
+number of cases of neg_trump of score 0: 427
+size of testing set X&Y: 1320, 1320
+
+
+Number of sentences after tokenize: 8437
+Building dictionary..
+121335  total words  13298  unique words
+
+number of cases of posi_hillary of score 1: 2027
+number of cases of neg_hillary of score 0: 6410
+size of training set X&Y: 8437, 8437
+number of cases of posi_hillary of score 1: 485
+number of cases of neg_hillary of score 0: 1688
+size of testing set X&Y: 2173, 2173
+
+
+Number of sentences after tokenize: 6140
+Building dictionary..
+87821  total words  11419  unique words
+
+number of cases of trump of score 2: 3722
+number of cases of hillary of score 0: 2027
+number of cases of neutral of score 1: 6058
+size of training set X&Y: 11758, 11758
+number of cases of trump of score 2: 893
+number of cases of hillary of score 0: 485
+number of cases of neutral of score 1: 1508
+size of testing set X&Y: 2935, 2935
+
+'''
 

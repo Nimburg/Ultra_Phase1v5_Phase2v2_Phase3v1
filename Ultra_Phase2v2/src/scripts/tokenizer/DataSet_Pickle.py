@@ -195,7 +195,8 @@ def grab_data_fileName(path_data, path_tokenizer, dictionary,
 
 def DataSet_Pickle_Train(dict_parameters, DataSet_preToken_Path, path_tokenizer, 
 						 dict_train, dict_test, 
-						 flag_truncate = True, flag_alsoTxt=False):
+						 flag_truncate = True, ratio_truncate = 10,
+						 flag_alsoTxt=False):
 	'''
 	DataSet_preToken_Path: '../Data/DataSet_Tokenize/'
 	path_tokenizer: './scripts/tokenizer/'
@@ -297,14 +298,14 @@ def DataSet_Pickle_Train(dict_parameters, DataSet_preToken_Path, path_tokenizer,
 	if flag_truncate == True:
 		for idx_score_all in range( len(train_x_all) ):
 			# check number of instances for this score
-			if len( train_x_all[idx_score_all] ) > 1.2*counter_min:
+			if len( train_x_all[idx_score_all] ) > ratio_truncate*counter_min:
 				temp_X = []
 				temp_Y = []
 				# need truncate, first shuffle instances of this score
 				idx_score_list = numpy.arange( len( train_x_all[idx_score_all] ) )
 				numpy.random.shuffle(idx_score_list)
 				# add values to temp_X,Y
-				for i in range( int(1.2*counter_min) ): 
+				for i in range( int(ratio_truncate*counter_min) ): 
 					# list of lists
 					idx = idx_score_list[i]
 					# train_x_all[idx_score_all][ idx ] is a list/sentence
@@ -314,7 +315,7 @@ def DataSet_Pickle_Train(dict_parameters, DataSet_preToken_Path, path_tokenizer,
 				# add to train_x,y
 				train_x = train_x + temp_X # list of lists
 				train_y = train_y + temp_Y
-			if len( train_x_all[idx_score_all] ) <= 1.2*counter_min:
+			if len( train_x_all[idx_score_all] ) <= ratio_truncate*counter_min:
 				# train_x_all[idx_score_all] is list of sentences
 				train_x = train_x + train_x_all[idx_score_all]
 				# train_y_all[idx_score_all] is list of int
@@ -356,7 +357,7 @@ def DataSet_Pickle_Train(dict_parameters, DataSet_preToken_Path, path_tokenizer,
 	if flag_truncate == True:
 		for idx_score_all in range( len(test_x_all) ):
 			# check number of instances for this score
-			if len( test_x_all[idx_score_all] ) > 1.2*counter_min:
+			if len( test_x_all[idx_score_all] ) > ratio_truncate*counter_min:
 				temp_X = []
 				temp_Y = []
 				
@@ -365,7 +366,7 @@ def DataSet_Pickle_Train(dict_parameters, DataSet_preToken_Path, path_tokenizer,
 				numpy.random.shuffle(idx_score_list)
 				
 				# add values to temp_X,Y
-				for i in range( int(1.2*counter_min) ): 
+				for i in range( int(ratio_truncate*counter_min) ): 
 					# list of lists
 					idx = idx_score_list[i]
 					# test_x_all[idx_score_all][ idx ] is a list/sentence
@@ -375,7 +376,7 @@ def DataSet_Pickle_Train(dict_parameters, DataSet_preToken_Path, path_tokenizer,
 				# add to test_x,y
 				test_x = test_x + temp_X # list of lists
 				test_y = test_y + temp_Y
-			if len( test_x_all[idx_score_all] ) <= 1.2*counter_min:
+			if len( test_x_all[idx_score_all] ) <= ratio_truncate*counter_min:
 				# test_x_all[idx_score_all] is list of sentences
 				test_x = test_x + test_x_all[idx_score_all]
 				# test_y_all[idx_score_all] is list of int
