@@ -12,11 +12,11 @@ The case which was chosen to study is the 2016 presidential election, since this
 -----------------------------------------------------------------------------
 How this Objective is Pursued:
 
-In order to achieved such objective, one has to download and analyze huge amounts of social media data. In this case, I downloaded 18 continuous days' worth of data from twitter API (July 13 to Aug 2, 2016), roughly 120GB. The reason that one needs such a large, continuous data set is because: 1st, since we are trying to understand individual's shifting opinions, we naturally what to have a continuous data set so as not to "miss something"; 2nd, since the fact that individual usually takes some time to have his/her mind changed, and that most people don't spend all day on twitter, thus each individual's activity is rather sparse in time, thus one need to collect data for a reasonably long period of time. 
+This project is currently divided into three phases, each for distinct purposes. Please check session "Introduction to the DataSet of this Project" below for information regarding to data set used for this project.
 
-The Phase1 of this project is devoted to data cleaning and extracting basic relevent information from this huge data set. 
+The Phase1 of this project is devoted to data cleaning and extracting basic relevent information from data set. 
 
-The Phase1v5 is the 5th re-write of Phase1. Since we have the 2016 election as our focus point, thus only a small part of the raw data set are relevent to our purposes. In order to extract these relevent data, I used a dynamic method for data cleaning. The basic idea is that, during the process of scaning through the data set, one will build up a dictionary for hash tags, keywords and individuals that are more closely related to the 2016 elections(tags and individuals have different estimation standards). And we are using this dictionary to extract relevent information. 
+The Phase1v5 is the 5th re-write of Phase1. Since we have the 2016 election as our focus point, without caring too much about irrelevent topics, thus only a small part of the raw data set are relevent to our purposes. In order to extract these relevent data, I adopted a dynamic method for data cleaning. The basic idea is that, during the process of scaning through the data set, one will build up a dictionary for hash tags, keywords and individuals that are more closely related to the 2016 elections(tags and individuals have different estimation standards). And we are using this dictionary to extract relevent information. 
 
 The Phase2 of this project is devoted to sentiment analysis. 
 
@@ -30,6 +30,9 @@ Usually, the "golden standard" corpus when it comes to training a NLP applicatio
 
 2nd, among hash tags that are clearly biased towards certain sentiments, like "vote4XXXX" or "XXXXislier", those hash tags that express dislike are much more frequently used than those express supported. As a results, the corpus one could get in this way is heavily biased towards the "dislike" sentiment. For both candidates (trump and hillary), the number of tweets expressing dislike is easily ten times larger than that of support. 
 
+Phase3 of this project will be built on Phase1 and Phase2 to generate some very interesting results. 
+
+The two pictures below are generated using a 18-days' continous data set took in July 2016. It demonstrates, on a day-to-day basis, the top 10 most used tags' relevence to the two candidates (Trump and Hillary) as well as how the "most used tags in a specific day" fares when one stretches the time window into three weeks. 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2/blob/master/tag_july_relevence.gif)
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2/blob/master/tag_july_HisCall.gif)
