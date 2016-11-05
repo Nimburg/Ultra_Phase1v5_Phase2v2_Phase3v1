@@ -33,9 +33,11 @@ Usually, the "golden standard" corpus when it comes to training a NLP applicatio
 Phase3 of this project will be built on Phase1 and Phase2 to generate some very interesting results. 
 
 The two pictures below are generated using a 18-days' continous data set took in July 2016. It demonstrates, on a day-to-day basis, the top 10 most used tags' relevence to the two candidates (Trump and Hillary) as well as how the "most used tags in a specific day" fares when one stretches the time window into three weeks. 
+
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2/blob/master/tag_july_relevence.gif)
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2/blob/master/tag_july_HisCall.gif)
+Here, the number before each hash tag are the number of its usage during the day which is specified by the date displayed at top middle title. 
 
 
 -----------------------------------------------------------------------------
