@@ -14,11 +14,11 @@ The case which was chosen to study is the 2016 presidential election, since this
 
 This project is currently divided into three phases, each for distinct purposes. Please check session "Introduction to the DataSet of this Project" below for information regarding to data set used for this project.
 
-**The Phase1 of this project is devoted to data cleaning and extracting basic relevent information from data set**
+**Phase1 of this project is devoted to data cleaning and extracting basic relevent information from data set**
 
 The Phase1v5 is the 5th re-write of Phase1. Since we have the 2016 election as our focus point, without caring too much about irrelevent topics, thus only a small part of the raw data set are relevent to our purposes. In order to extract these relevent data, I adopted a dynamic method for data cleaning. The basic idea is that, during the process of scaning through the data set, one will build up a dictionary for hash tags, keywords and individuals that are more closely related to the 2016 elections(tags and individuals have different estimation standards). And we are using this dictionary to extract relevent information. 
 
-**The Phase2 of this project is devoted to sentiment analysis**
+**Phase2 of this project is devoted to sentiment analysis**
 
 During my previous attempts at this subject, I realized that purely statistical variables, though abundent, is not very effective when it comes to figuring out individual's opinion, nor when it comes to classify what kinds of information certain specific individual is receiving. In short, sentiment analysis of tweet text message is absolutely necessary for achieveing the objective. 
 
