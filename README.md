@@ -30,6 +30,10 @@ Usually, the "golden standard" corpus when it comes to training a NLP applicatio
 
 2nd, among hash tags that are clearly biased towards certain sentiments, like "vote4XXXX" or "XXXXislier", those hash tags that express dislike are much more frequently used than those express supported. As a results, the corpus one could get in this way is heavily biased towards the "dislike" sentiment. For both candidates (trump and hillary), the number of tweets expressing dislike is easily ten times larger than that of support. 
 
+![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2/blob/master/tag_july_relevence.gif)
+
+![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2/blob/master/tag_july_HisCall.gif)
+
 -----------------------------------------------------------------------------
 The Way Forward
 
