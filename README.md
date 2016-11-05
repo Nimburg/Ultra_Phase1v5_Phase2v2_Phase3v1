@@ -37,6 +37,7 @@ The two pictures below are generated using a 18-days' continous data set took in
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2/blob/master/tag_july_relevence.gif)
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2/blob/master/tag_july_HisCall.gif)
+
 Here, the number before each hash tag are the number of its usage during the day which is specified by the date displayed at top middle title. 
 
 
