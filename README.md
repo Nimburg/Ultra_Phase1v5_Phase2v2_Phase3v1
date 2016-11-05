@@ -49,7 +49,7 @@ Relevence of each hash tag to a candidate is scaled as: if the hash tag contains
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2/blob/master/tag_july_HisCall.gif)
 
-Here, the "cumulated number of call" is the cumulated number of a hash tag's usage during the 18-day time window. Naturally, this cumulated number will increase as one moves to a later date. 
+Here, the "cumulated number of call" is the cumulated number of a hash tag's usage during the 18-day time window. Naturally, this cumulated number will increase as one moves to a later date. For example, one could clearly see that #demsinphilly is a really hot topic between July 25th and July 29th. 
 
 
 -----------------------------------------------------------------------------
