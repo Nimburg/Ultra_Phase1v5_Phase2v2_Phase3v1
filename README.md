@@ -1,16 +1,16 @@
 # Ultra_Phase1v5_Phase2v2
 
-A more in-detail documentation will be created later. 
 
 -----------------------------------------------------------------------------
 Objective of this Project:
 
-The objective of this project is to analyze "how individual's preference towards one (or several closely related) subjects might shift under external influence".
+The objective of this project is to analyze "how individual's preference towards one (or several closely related) subjects might shift under external influence". The value of such objective is almost self-explanatory, as it is not only important in academic settings (for disciplines like sociology, political science, public policy, etc) but also important in industry settings (advertising, financial market strategy, etc).
 
 The case which was chosen to study is the 2016 presidential election, since this is certainly a major media and public focus point. Twitter was chosen as the data source, primarily due to its free twitter API. 
 
+
 -----------------------------------------------------------------------------
-How this Objective is pursued:
+How this Objective is Pursued:
 
 In order to achieved such objective, one has to download and analyze huge amounts of social media data. In this case, I downloaded 18 continuous days' worth of data from twitter API (July 13 to Aug 2, 2016), roughly 120GB. The reason that one needs such a large, continuous data set is because: 1st, since we are trying to understand individual's shifting opinions, we naturally what to have a continuous data set so as not to "miss something"; 2nd, since the fact that individual usually takes some time to have his/her mind changed, and that most people don't spend all day on twitter, thus each individual's activity is rather sparse in time, thus one need to collect data for a reasonably long period of time. 
 
@@ -33,6 +33,13 @@ Usually, the "golden standard" corpus when it comes to training a NLP applicatio
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2/blob/master/tag_july_relevence.gif)
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2/blob/master/tag_july_HisCall.gif)
+
+
+-----------------------------------------------------------------------------
+Introduction to the DataSet of this Project:
+
+In order to achieved such objective, one has to download and analyze huge amounts of social media data. In this case, I downloaded 18 continuous days' worth of data from twitter API (July 13 to Aug 2, 2016), roughly 120GB. The reason that one needs such a large, continuous data set is because: 1st, since we are trying to understand individual's shifting opinions, we naturally what to have a continuous data set so as not to "miss something"; 2nd, since the fact that individual usually takes some time to have his/her mind changed, and that most people don't spend all day on twitter, thus each individual's activity is rather sparse in time, thus one need to collect data for a reasonably long period of time.
+
 
 -----------------------------------------------------------------------------
 The Way Forward
