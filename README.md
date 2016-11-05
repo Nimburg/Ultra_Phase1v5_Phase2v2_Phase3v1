@@ -48,7 +48,11 @@ Here, the "cumulated number of call" is the cumulated number of a hash tag's usa
 -----------------------------------------------------------------------------
 Introduction to the DataSet of this Project:
 
-In order to achieved such objective, one has to download and analyze huge amounts of social media data. In this case, I downloaded 18 continuous days' worth of data from twitter API (July 13 to Aug 2, 2016), roughly 120GB. The reason that one needs such a large, continuous data set is because: 1st, since we are trying to understand individual's shifting opinions, we naturally what to have a continuous data set so as not to "miss something"; 2nd, since the fact that individual usually takes some time to have his/her mind changed, and that most people don't spend all day on twitter, thus each individual's activity is rather sparse in time, thus one need to collect data for a reasonably long period of time.
+In order to achieved such objective, one has to download and analyze huge amounts of social media data. The reason that one needs such a large, continuous data set is because: 1st, since we are trying to understand individual's shifting opinions, we naturally what to have a continuous data set so as not to "miss something"; 2nd, since the fact that individual usually takes some time to have his/her mind changed, and that most people don't spend all day on twitter, thus each individual's activity is rather sparse in time, thus one need to collect data for a reasonably long period of time.
+
+In this case, I have so far collected (commented on Nov 5th, 2016) 28 days' worth of data, among which 18 contineous days in July (July 13th to Aug 2nd, 2016), 7 contineous days in October (Oct 15th to 21st, 2016) and attempting a contineous data set from Oct 31st til some time after Nov8th election day. On average, each day's worth of data is ~7GB with 3 million tweets. I am only collecting tweets with geo-information indicating its user located within the United States. 
+
+It is worth noting that 3 million tweets per day is apparently too few for such a user base. My guess is that the amount of tweets I could collect is limited by my twitter API query speed. However, since tweets are downloaded randomly (those that are got/missed by my API), it won't have any negtive effects on my analysis. 
 
 
 -----------------------------------------------------------------------------
