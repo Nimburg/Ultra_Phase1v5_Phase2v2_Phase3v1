@@ -43,11 +43,11 @@ The two pictures below are generated using a 18-days' continous data set took in
 
 The number before each hash tag are the number of its usage during the day which is specified by the date displayed at top middle title. 
 
-![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2/blob/master/tag_july_relevence.gif)
+![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/tag_july_relevence.gif)
 
 Relevence of each hash tag to a candidate is scaled as: if the hash tag contains keyword "trump"( or "hillary"), then its relevence is set to 10 correspondingly; if the hash tag doesn't contain any keyword but is ALWAYS used with hash tag of relevence 10, then its relevence would stay at 9; the less frequently a hash tag is associated with keyword or hash tags of higher relevence, the lower its relevence score.
 
-![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2/blob/master/tag_july_HisCall.gif)
+![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/tag_july_HisCall.gif)
 
 Here, the "cumulated number of call" is the cumulated number of a hash tag's usage during the 18-day time window. Naturally, this cumulated number will increase as one moves to a later date. For example, one could clearly see that #demsinphilly is a really hot topic between July 25th and July 29th. 
 
