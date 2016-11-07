@@ -54,9 +54,13 @@ The two pictures below are generated using 25 days' worth of data (18 days in Ju
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/trump_tags.gif)
 
+The bar plots gives the usage per day, while the red and blue lines gives the "sentiment" they carry. For example, if the sentiment value towards trump (red line) is really close to +1, then it means most of tweets that called this hash tag is expressing support for candidate Trump. In my analysis, each hash tag is assigned two sentiment values, one for each candidate. 
+
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/hillary_tags.gif)
 
+From the above two pictures, one could observe that Trump's most used hash tags generally are supportive. Particularly, both #trumppence16 (this tag is more closely related to Trump's campaign) and #trump (this tag is used much more widely, including discussion about candidate Trump himself) demonstrates increasing approval scores in the leading up to November. However, the story for candidate Hillary is the opposite. With the exception of #hillary2016 (a tag more closely related to Hillary's campaign), which is barely above 0 even for the blue line, all other tags all below 0. 
 
+An explanation about how I calculated those "neutral" hash tags' sentiment score would be necessary. I did it **using a dynamic, iteration method.**  
 
 
 -----------------------------------------------------------------------------
