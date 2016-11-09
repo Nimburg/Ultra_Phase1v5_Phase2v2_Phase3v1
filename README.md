@@ -69,7 +69,7 @@ An explanation about how I calculated those "neutral" hash tags' sentiment score
 
 ### Most Used Hash Tags on Nov 6th
 
-In the above results estimating sentiment of specific tags towards particular candidate, scores of those hand-marked tags are kept constant at the hand-marked value. However, I have noticed that some users may call hash tags related to both candidates while expressing clear support for one of the candidate in his/her tweet messages. Thus, I decided to relax the sentiment scores for those hand-marked hash tags, only assigning them the hand-marked value at the beginning of each day's iteration, then allowing their scores to float according to the context. The result is shown below. 
+In the above results estimating sentiment of specific tags towards particular candidate, scores of those hand-marked tags are kept constant at the hand-marked value. However, I have noticed that some users may call hash tags related to both candidates while expressing clear support for one of the candidate in his/her tweet messages. Thus, I decided to relax the sentiment scores for those hand-marked hash tags, only assigning them the hand-marked value at the beginning of each day's iteration, then allowing their scores to float according to the context. The result is shown below. The hash tags are the top 30 most used tags on Nov 6th, including both hand-marked tags and "neutral" tags. 
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/Nov6th_TopTags.gif)
 
