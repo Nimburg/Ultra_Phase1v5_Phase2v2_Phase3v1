@@ -54,7 +54,7 @@ Here, the "cumulated number of call" is the cumulated number of a hash tag's usa
 
 The two pictures below are generated using 25 days' worth of data (18 days in July, 7 days in October). It demonstrates, for a selected few "neutral, high usage" hash tags, how their usage as well as the sentiment they carry change over time. 
 
-![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/trump_tags.gif)
+![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/trump_tags.gif =900*600)
 
 The bar plots gives the usage per day, while the red and blue lines gives the "sentiment" they carry. For example, if the sentiment value towards trump (red line) is really close to +1, then it means most of tweets that called this hash tag is expressing support for candidate Trump. In my analysis, each hash tag is assigned two sentiment values, one for each candidate. 
 
