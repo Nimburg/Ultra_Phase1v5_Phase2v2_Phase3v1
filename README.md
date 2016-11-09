@@ -77,8 +77,8 @@ As one could see:
 - # trump toke the daily most used hash tag position. # trump has consistantly been the most used hash tag through out the election campaign. 
 - # imwithher toke the second place. This is hardly a surprise, as this tag is closely related to Hillary's campaign, and should be highly used at this terminal stage of the election campaign. However, # imwithher's usage is no where close to # trump. Worse still, its sentiment score towards Hillary is barely above zero. This is a surprise
 - # maga follows in the 3rd place. MAGA (short for Make America Great Again) is closely related to Trump's campaign. Different from # imwithher, the sentiment score is clearly positive (negative) towards Trump (Hillary).
-- # hillary is in the 9th place. As with the case # hillary, this tag is more related to discussions about Hillary herself rather than her campaign. In the leading up to election day, the sentiment score towards Hillary is improving, but still negative, indicating considerable proportion of users hold a negative opinion towards Hillary
-
+- # hillary is in the 9th place. As with the case of # trump, this tag is more related to discussions about Hillary herself rather than her campaign. In the leading up to election day, the sentiment score towards Hillary is improving, but still negative, indicating considerable proportion of users hold a negative opinion towards Hillary
+- # vote is a hash tag that saw increasing use only when we approaches the election day. This hash tag should be bipartisan, and both its sentiment scores are indeed positive and close to zero. Still, we saw a lead of Trump here. 
 
 
 -----------------------------------------------------------------------------
