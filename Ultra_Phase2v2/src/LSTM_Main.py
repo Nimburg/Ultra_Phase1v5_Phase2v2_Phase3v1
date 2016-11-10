@@ -505,33 +505,6 @@ def build_model(tparams, options):
 
     ####################################################################################
     # embedding
-    # 
-    # LSTM matrix_embed
-    # randn = numpy.random.rand(options['n_words'], options['dim_proj'])
-    # params['Wemb'] = (0.01 * randn).astype(config.floatX)
-    # 
-    # the dimension of params['Wemb'] represents the max_degree of freedoms in the system
-    # 
-    # options['n_words'] should equal to x.flatten() 's dimension
-    # which is post-Prep_data(), as (length_sentences, N_sentence_per_batch)
-    # setting maxlen=25 and batch_size=16 gives options['n_words'] = 400
-    # 
-    # from later, x = [train[0][t]for t in train_index]; 
-    # then before load into Model: x, mask, y = prepare_data(x, y); axis swaped
-    # then emb = tparams['Wemb'][x.flatten()].reshape([ n_timesteps, n_samples, options['dim_proj'] ])
-    #           as (max length of each sentence), (number of sentences of each minibatch), (word_embeding dimension)
-    # 
-    # into lstm_layer() as state_below
-    # then n_samples = state_below.shape[1] = emb.shape[1] 
-    #                                       as n_timesteps as number of sentences of each minibatch
-    # then tensor.alloc(numpy_floatX(0.),n_samples,dim_proj) as _h and _c matrix
-    # 
-    # n_timesteps = x.shape[0] => as max length of each sentence
-    # n_samples = x.shape[1] => as number of sentences of each minibatch 
-    # 
-    # Here LSTM assuming a context_window size of 1; 
-    # since we are using LSTM, there is little point of context_window_size > 1; 
-    # 
     emb = tparams['Wemb'][x.flatten()].reshape([ n_timesteps, n_samples, options['dim_proj'] ])
 
     ####################################################################################
@@ -899,33 +872,6 @@ def train_lstm(
 
 Prediction Codes
 
-model options: {
-    'dataset': 'trainAgainst_hillary.pkl', 
-    'loadfrom': 'lstm_model_trainAgainst_hillary.npz', 
-    'validFreq': 370, 
-    'n_words': 12000, 
-    'batch_size': 16, 
-    'decay_c': 0.0, 
-    'patience': 3, 
-    'reload_model': None, 
-    'lrate': 0.0001, 
-    'max_epochs': 100, 
-    'dispFreq': 10, 
-    'encoder': 'lstm',
-
-    'optimizer': <function adadelta at 0x0000000014C54C18>, 
-
-    'valid_batch_size': 64, 
-    'use_dropout': True, 
-    'dim_proj': 256, 
-    'maxlen': 100, 
-    'saveto': 'lstm_model_trainAgainst_hillary.npz', 
-    'noise_std': 0.0, 
-    'test_size': -1, 
-    'saveFreq': 1110, 
-    'dataset_path': '../Data/DataSet_Tokenize/'
-}
-
 ####################################################################################
 """
 
@@ -1120,8 +1066,7 @@ if __name__ == '__main__':
     
     ####################################################################
 
-    # MySQL_DBkey = {'host':'localhost', 'user':'sa', 'password':'fanyu01', 'db':'ultrajuly_p1v5_p2v2','charset':'utf8mb4'}
-    MySQL_DBkey = {'host':'localhost', 'user':'sa', 'password':'fanyu01', 'db':'ultrajuly_p1v5_p2v2','charset':'utf8'}
+    MySQL_DBkey = {'host':'localhost', 'user':'', 'password':'', 'db':'','charset':'utf8'}
 
     ####################################################################################
     dict_tokenizeParameters_trainAgainst_trump = {

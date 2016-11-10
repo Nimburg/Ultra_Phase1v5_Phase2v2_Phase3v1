@@ -265,7 +265,7 @@ if __name__ == "__main__":
 
     ####################################################################
 
-    MySQL_DBkey = {'host':'localhost', 'user':'sa', 'password':'fanyu01', 'db':'ultrajuly_p1v5_p2v2','charset':'utf8'}
+    MySQL_DBkey = {'host':'localhost', 'user':'', 'password':'', 'db':'','charset':'utf8'}
 
     ####################################################################
 

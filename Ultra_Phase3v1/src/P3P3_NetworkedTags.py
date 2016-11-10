@@ -95,38 +95,6 @@ def Iteration_TagSentiScores(MarkedTags_dict, Tags_Today_preIter, Tags_PreviousD
     thre_dayCall: threshold on one-day Ncalls
 
     jsonOutput_fileNameHeader: file name of .json save of Tags_Today_postIter
-    
-    --------------------------------
-    Tags_Today_postIter need to have:
-    # sentiment scores
-    Tags_Today_postIter['tag']['senti_score1']
-    Tags_Today_postIter['tag']['senti_score2']
-    # statistics on relevence scores
-    Tags_Today_postIter['tag']['score1_ave']
-    Tags_Today_postIter['tag']['score1_std']
-    Tags_Today_postIter['tag']['score1_median'] <- statistics.median(list)
-    Tags_Today_postIter['tag']['score1_max'] <- max, min plus ave, median provides an estimation of stability
-    Tags_Today_postIter['tag']['score1_min'] <- whether ave is close to the stable value or still decaying
-    # statistics on relevence calls
-    # currently unnecessary
-    # statistics on degree_tags
-    Tags_Today_postIter['tag']['tag_degree']
-
-    --------------------------------
-    calculation of senti_score
-
-    if tag in MarkedTags_dict: do NOT change
-    
-    0th iteration
-    New_senti_score = previous_senti_score if exists
-
-    Nth iteration
-    New_senti_score = ('New_senti_score' + Networked_tags_score)/2
-
-    Networked_tags_score = 1/presentDay_total_Ntags * ( N_eachTag_Call * score_eachTag_presentDay )
-
-    Stop either when max_IterPeriod reached, 
-    Or when changes in Networked_tags_score are small enough
     '''
 
     #################################
