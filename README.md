@@ -4,7 +4,7 @@
 -----------------------------------------------------------------------------
 ## Objective of this Project:
 
-**The objective of this project is to analyze "how individual's preference towards one (or several closely related) subjects might shift under external influence".** The value of such objective is almost self-explanatory, as it is not only important in academic settings (for disciplines like sociology, political science, public policy, etc) but also important in industry settings (advertising, financial market strategy, etc).
+**The objective of this project is to practice some big-data analysis, like topic trending, user behavior profiling and sentiment analysis on text messages.** 
 
 The case which was chosen to study is the 2016 presidential election, since this is certainly a major media and public focus point. Twitter was chosen as the data source, primarily due to its free twitter API. 
 
