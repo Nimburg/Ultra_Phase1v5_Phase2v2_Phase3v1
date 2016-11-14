@@ -56,19 +56,29 @@ First, let's look at hash tags that are directly related to the "voting", in the
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/ED_vote.gif)
 
-Secondly, let's look at hash tags that are related to the FBI investigation into Candidate Hillary's email affair. Here I used hash tags "comey", "fbi" and "wikileaks", as these are the most frequently used during the last few days. As one could see, "comey" and "fbi" have a significant drop in their sentiment score toward Hillary around Nov 3rd, coinciding FBI's latest re-opening of the investigation. However, the sentiment score got a sharp increase on Nov 7~8th, coinciding not only the time when FBI clears Hillary's wrong doings, but also the election day when lots of supporters rallying on social media. 
+Secondly, let's look at hash tags that are related to the FBI investigation into Candidate Hillary's email affair. Here I used hash tags "comey", "fbi" and "wikileaks", as these are the most frequently used during the last few days. As one could see, "comey" and "fbi" have a significant drop in their sentiment score toward Hillary around Nov 3rd, coinciding FBI's latest re-opening of the investigation. However, the sentiment score got a sharp increase on Nov 7~8th, coinciding not only the time when FBI clears Hillary's wrong doings, but also the election day when lots of supporters are rallying on social media. The hash tag "wikileaks" demonstrated a certain degree of correlation with the other two hash tags, and saw improving sentiment scores towards the election day after FBI clears Hillary's wrong doings round Nov 7th. 
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/ED_fbi.gif)
 
-Thus, I am confident that my current method of estimating hash tags' sentiments is working. For details, please see **section "Ideas for Semi-Automatic Sentiment Analysis"** below. 
+In conclusion, I am confident that my current method of estimating hash tags' sentiments is working. For details, please see **section "Ideas for Semi-Automatic Sentiment Analysis"** below. 
 
 
 -----------------------------------------------------------------------------
 ## Ideas for Semi-Automatic Sentiment Analysis
 
-**First about generating a corpus for training**
+In the context of social media, sentiment analysis occupies a central place when one tries to understand what is going on, since it is not enough to know "who talked with whom", rather, one needs to know "who talked what with whom". However, text messages from social media like twitter, reddit and factbook have some of its unique challenges. 
 
-Usually, the "golden standard" corpus when it comes to training a NLP application is a corpus that is manually marked by human beings. Naturally, I don't have time to marked hundreds of thousands of tweets. What I could do instead is that, since we are studying tweet messages, they all come with one or more hash tags. Thus, I could hand-mark the most frequently used hashtags, and use these hashtags to get a rough estimation of the opinions expressed by tweet messages. Nonetheless, there are still several challenges related to generating a corpus in this way. 
+**The first challenge is of generating a training corpus.** Usually, the "golden standard" corpus when it comes to training a NLP application is a corpus that is manually marked by human beings. However, human-effort-generated corpus takes time, human resources and money. **But the most critical short coming of such a corpus is that it could not keep up with the flowing, dynamic context of a social media.** 
+
+
+
+
+
+Naturally, I don't have time to marked hundreds of thousands of tweets. 
+
+
+
+What I could do instead is that, since we are studying tweet messages, they all come with one or more hash tags. Thus, I could hand-mark the most frequently used hashtags, and use these hashtags to get a rough estimation of the opinions expressed by tweet messages. Nonetheless, there are still several challenges related to generating a corpus in this way. 
 
 1st, of those highly used hash tags, some are neutral, like "trump2016" or "hillary2016". These hash tags are not necessarily used to express support or dislike. Thus one could not use them to mark tweet messages. 
 
@@ -79,6 +89,11 @@ Usually, the "golden standard" corpus when it comes to training a NLP applicatio
  2. I noticed that people tends to call multiple hash tags at once. Thus, it would be possible to build up a "netword" dictionary for each hash tag, recording: what other hash tags are used together, what is the number of usage of those "used together" hash tags. These work are done in Phase1. 
  3. I could calculate sentiment scores of any specific neutral hash tag (or augmenting sentiment scores of clearly biased hash tags) using **all** hash tags that are inside its "network" dictionary, through iteration, on a day-to-day basis. 
  4. when calculating sentiment scores of hash tags, the maximum number of iteration, the early stop criteria as well as the learning rate are set up in a way such that: for clearly biased hash tag, its sentiment score would at most change 50% per day; for neutral hash tags, its sentiment score could change almost 100% per day, much more flexible than clearly biased ones.
+
+
+
+
+
 
 
 -----------------------------------------------------------------------------
