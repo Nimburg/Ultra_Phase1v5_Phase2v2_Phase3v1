@@ -4,9 +4,11 @@
 -----------------------------------------------------------------------------
 ## Objective of this Project:
 
-**The objective of this project is to practice some big-data analysis, like topic trending, user behavior profiling and sentiment analysis on text messages.** 
+**The primary objective of this project is to practice some big-data analysis, like topic trending, user behavior profiling and sentiment analysis on text messages.** 
 
 The case which was chosen to study is the 2016 presidential election, since this is certainly a major media and public focus point. Twitter was chosen as the data source, primarily due to its free twitter API. 
+
+During my pursue of the primary objective of this project, I also developed a "prototype" method for **dynamic sentiment analysis of social media text messages, without human-effort-generated training corpus**. The details of this method will be discussed in the section "Ideas for Semi-Automatic Sentiment Analysis" below. 
 
 
 -----------------------------------------------------------------------------
