@@ -56,22 +56,11 @@ First, let's look at hash tags that are directly related to the "voting", in the
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/ED_vote.gif)
 
+Secondly, let's look at hash tags that are related to the FBI investigation into Candidate Hillary's email affair. Here I used hash tags "comey", "fbi" and "wikileaks", as these are the most frequently used during the last few days. As one could see, "comey" and "fbi" have a significant drop in their sentiment score toward Hillary around Nov 3rd, coinciding FBI's latest re-opening of the investigation. However, the sentiment score got a sharp increase on Nov 7~8th, coinciding not only the time when FBI clears Hillary's wrong doings, but also the election day when lots of supporters rallying on social media. 
 
+![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/ED_fbi.gif)
 
-
-
-
-
-In the above results estimating sentiment of specific tags towards particular candidate, scores of those hand-marked tags are kept constant at the hand-marked value. However, I have noticed that some users may call hash tags related to both candidates while expressing clear support for one of the candidate in his/her tweet messages. Thus, I decided to relax the sentiment scores for those hand-marked hash tags, only assigning them the hand-marked value at the beginning of each day's iteration, then allowing their scores to float according to the context. The result is shown below. The hash tags are the top 30 most used tags on Nov 6th, including both hand-marked tags and "neutral" tags. 
-
-![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/Nov6th_TopTags.gif)
-
-As one could see: 
-- # trump toke the daily most used hash tag position. # trump has consistantly been the most used hash tag through out the election campaign. 
-- # imwithher toke the second place. This is hardly a surprise, as this tag is closely related to Hillary's campaign, and should be highly used at this terminal stage of the election campaign. However, # imwithher's usage is no where close to # trump. Worse still, its sentiment score towards Hillary is barely above zero. This is a surprise
-- # maga follows in the 3rd place. MAGA (short for Make America Great Again) is closely related to Trump's campaign. Different from # imwithher, the sentiment score is clearly positive (negative) towards Trump (Hillary).
-- # hillary is in the 9th place. As with the case of # trump, this tag is more related to discussions about Hillary herself rather than her campaign. In the leading up to election day, the sentiment score towards Hillary is improving, but still negative, indicating considerable proportion of users hold a negative opinion towards Hillary
-- # vote is a hash tag that saw increasing use only when we approaches the election day. This hash tag should be bipartisan, and both its sentiment scores are indeed positive and close to zero. Still, we saw a lead of Trump here. 
+Thus, I am confident that my current method of estimating hash tags' sentiments is working. For details, please see section "Ideas for Semi-Automatic Sentiment Analysis" below. 
 
 
 -----------------------------------------------------------------------------
