@@ -12,7 +12,7 @@ The case which was chosen to study is the 2016 presidential election, since this
 -----------------------------------------------------------------------------
 ## How this Objective is Pursued:
 
-This project is currently divided into three phases, each for distinct purposes. Please check session "Introduction to the DataSet of this Project" below for information regarding to data set used for this project. Please check session "Structure of this Project" for information regarding how this project (codes) is structured.
+This project is currently divided into three phases, each for distinct purposes. Please check session "Introduction to the DataSet of this Project" below for information regarding to data set used for this project. Please check session "Structure of this Project" below for information regarding how this project (codes) is structured.
 
 **Phase1 of this project is devoted to data cleaning and extracting basic relevent information from data set**
 
@@ -113,11 +113,11 @@ Also, I will try a "boost with different LSTM as contributing elements".
 -----------------------------------------------------------------------------
 ## Technical Details
 
-This set of codes are written in Python 2.7, using libraries that includes: theano, pymysq and other routine libs like numpy and pandas.
+This set of codes are written in Python 2.7, using libraries that includes: theano, pymysq, nltk and other routine libs like numpy and pandas.
 
-Phase1v5 and Phase2v2 both demands MySQL as the way of managing huge data sets. 
+Phase1v5, Phase2v2 and Phase3v1 all demands MySQL as the way of managing huge data sets. 
 
-The tokenization scripts are borrowed from https://github.com/moses-smt/mosesdecoder/raw/master/scripts/tokenizer/tokenizer.perl. Credits to Josh Schroeder. 
+The tokenization is done with the nltk package. 
 
-The LSTM training and predictions codes are adapted from the tutorial codes at http://deeplearning.net/tutorial/contents.html. I adapted the training codes so that it would work on my data sets; I added prediction codes so that it would work with other parts of my Phase2v2. 
+The LSTM training and predictions codes are adapted from the tutorial codes [here](http://deeplearning.net/tutorial/contents.html). I adapted the training codes so that it would work on my data sets; I added prediction codes so that it would work with other parts of my Phase2v2. 
 
