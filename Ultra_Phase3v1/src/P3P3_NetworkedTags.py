@@ -18,9 +18,7 @@ def MarkedTag_Import(file_name_list):
     '''
     file_name_list: list of .csv files; 2 files, 1st for keyword 1 as trump
     '''
-    # dict(), as main results structure
-    # key as 'tags', value is tuple (int, int)
-    # there is no separate dict() for keyword 1 & 2, as some tags over laps
+
     MarkedTags_dict = dict()
 
     counter_keyword = 0
@@ -70,7 +68,7 @@ def MarkedTag_Import(file_name_list):
 '''
 
 def Iteration_TagSentiScores(MarkedTags_dict, Tags_Today_preIter, Tags_PreviousDay_postIter, 
-                             max_IterPeriod=100, 
+                             max_IterPeriod=100, lr = 0.007, 
                              thre_senti_score1=0.01, thre_senti_score2=0.01,
                              thre_relev_score1=1.0, thre_relev_score2=1.0, 
                              thre_Ncall1=100, thre_Ncall2=100, 
@@ -85,16 +83,10 @@ def Iteration_TagSentiScores(MarkedTags_dict, Tags_Today_preIter, Tags_PreviousD
     present_date: pd.to_datetime, of present date
 
     max_IterPeriod: max number of iteration cycles
-    thre_senti_score1: thresholds to determine if senti_scores have converged through iteration
-    thre_senti_score2: 
-
-    thre_relev_score1: threshold on relevence score
-    thre_relev_score2: 
-    thre_Ncall1: threshold on cumulated calls
-    thre_Ncall2: 
-    thre_dayCall: threshold on one-day Ncalls
-
-    jsonOutput_fileNameHeader: file name of .json save of Tags_Today_postIter
+    lr: learning rate; how fast the initial senti_scores got influenced by its connections
+        new_score = (1-lr)*old_score + lr*updates for tags with hand-marked values
+        lr*10 for tags without hand-marked values
+        lr=0.007 because 0.993^100 ~ 0.5
     '''
 
     #################################
@@ -202,10 +194,7 @@ def Iteration_TagSentiScores(MarkedTags_dict, Tags_Today_preIter, Tags_PreviousD
 
         # going through each tag in Tags_Today_preIter
         for tag_iter in Tags_Today_preIter:
-            # if tag marked by human
-            if tag_iter in MarkedTags_dict:
-                continue # pass opeartions for this tag
-            # if this tag has to networked_tags
+
             if Tags_Today_preIter[tag_iter]['tag_degree'] == 0: 
                 continue # pass opeartions for this tag
 
@@ -246,29 +235,34 @@ def Iteration_TagSentiScores(MarkedTags_dict, Tags_Today_preIter, Tags_PreviousD
                     continue # done updating scores from tag_networked
 
             # end of for tag_networked in Tags_Today_preIter[tag_iter]['tag_counter']
+            
             if perTag_total_NetCall > 0:
                 perIter_senti_score1 = 1.0* perIter_senti_score1 / perTag_total_NetCall
                 perIter_senti_score2 = 1.0* perIter_senti_score2 / perTag_total_NetCall
             else:
                 # reset if sth is wrong with perTag_total_NetCall
-                perIter_senti_score1 = 0.0
-                perIter_senti_score2 = 0.0
+                # Or, if there is no connections, reset to its original value
+                perIter_senti_score1 = Tags_Today_preIter[tag_iter]['senti_score1']
+                perIter_senti_score2 = Tags_Today_preIter[tag_iter]['senti_score2']
 
-            # compare perIter_senti_score1 with present_day's senti_score, for updating and flagging
-            # sneti_score is between 0 and 1; 
-            if abs( perIter_senti_score1 - Tags_Today_preIter[tag_iter]['senti_score1']) >= thre_senti_score1:
-                flag_Iter_Stable = False
-                counter_Iter_unstable1 += 1
-                # early stop for converging scores
-                Tags_Today_preIter[tag_iter]['senti_score1'] = (Tags_Today_preIter[tag_iter]['senti_score1'] + perIter_senti_score1)/2.0
 
-            # compare perIter_senti_score2 with present_day's senti_score, for updating and flagging
-            # sneti_score is between 0 and 1; 
-            if abs( perIter_senti_score2 - Tags_Today_preIter[tag_iter]['senti_score2']) >= thre_senti_score2:
-                flag_Iter_Stable = False
-                counter_Iter_unstable2 += 1
-                # early stop for converging scores
-                Tags_Today_preIter[tag_iter]['senti_score2'] = (Tags_Today_preIter[tag_iter]['senti_score2'] + perIter_senti_score2)/2.0
+            if tag_iter not in MarkedTags_dict:
+                # senti_score1
+                if abs( perIter_senti_score1 - Tags_Today_preIter[tag_iter]['senti_score1']) >= thre_senti_score1:
+                    flag_Iter_Stable = False
+                    counter_Iter_unstable1 += 1
+                # senti_score2
+                if abs( perIter_senti_score2 - Tags_Today_preIter[tag_iter]['senti_score2']) >= thre_senti_score2:
+                    flag_Iter_Stable = False
+                    counter_Iter_unstable2 += 1
+
+            if tag_iter in MarkedTags_dict:
+                Tags_Today_preIter[tag_iter]['senti_score1'] = (1-lr)*Tags_Today_preIter[tag_iter]['senti_score1'] + lr*perIter_senti_score1
+                Tags_Today_preIter[tag_iter]['senti_score2'] = (1-lr)*Tags_Today_preIter[tag_iter]['senti_score2'] + lr*perIter_senti_score2
+            # for tags that are not hand-marked, lr could be larger
+            if tag_iter not in MarkedTags_dict:
+                Tags_Today_preIter[tag_iter]['senti_score1'] = (1-lr*10)*Tags_Today_preIter[tag_iter]['senti_score1'] + lr*10*perIter_senti_score1
+                Tags_Today_preIter[tag_iter]['senti_score2'] = (1-lr*10)*Tags_Today_preIter[tag_iter]['senti_score2'] + lr*10*perIter_senti_score2
 
         # end of for tag_iter in Tags_Today_preIter:
     

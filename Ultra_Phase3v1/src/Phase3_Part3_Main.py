@@ -269,16 +269,27 @@ if __name__ == "__main__":
 
     ####################################################################
 
-    flag_Generate_NetworkedTags = False  
+    flag_Generate_NetworkedTags = True    
 
     HandMarkedTags_fileNames_list = ['MarkedTag_keyword1.csv','MarkedTag_keyword2.csv']
     
     ####################################################################    
 
-    flag_Extract_RequestedTags = True  
+    flag_Extract_RequestedTags = False     
 
-    Trump_list = ['trump', 'donaldtrump', 'trump2016', 'trumppence16', 'trumppence2016', 'trumppence', 'trumptrain']
-    Hillary_list = ['hillary', 'hillaryclinton', 'hillary2016', 'clinton', 'demsinphilly']
+    Trump_list = ['trump', 'donaldtrump', 'trump2016', 'trumppence16', 'trumppence2016', \
+                  'trumppence', 'trumptrain', 'maga', 'nevertrump', 'election2016']
+    
+    Hillary_list = ['hillary', 'hillaryclinton', 'hillary2016', 'demsinphilly', 'imwithher']
+    
+    Nov7th_list = ['trump', 'imwithher', 'maga', 'draintheswamp', 'hillaryclinton', 'nevertrump', \
+                   'election2016', 'trumppence16', 'hillary', 'neverhillary', 'trumptrain', \
+                   'fbi', 'vote', 'crookedhillary', 'makeamericagreatagain', 'comey', 'votetrump', \
+                   'donaldtrump', 'clinton', 'strongertogether', \
+                   'trump2016', 'abovethelaw', 'fakevotingfacts', 'reno', 'sundaymorning', 'maga3x', \
+                   'ificouldchangehistory', 'lockherup', 'votetrumppence16', 'podestaemails32', \
+                   'wikileaks', 'florida', 'votehillary', 'cnn', 'dumptrump', 'gop', 'obama', 'nyc', \
+                   'hrc', 'america', 'elections2016']
 
     ####################################################################
 
@@ -289,7 +300,7 @@ if __name__ == "__main__":
         Start_Time = pd.to_datetime(Start_Time)
         print "start time: ", Start_Time.strftime('_%Y_%m_%d_%H')
 
-        End_Time = '2016-11-05 00:00:00'
+        End_Time = '2016-11-10 00:00:00'
         # End_Time = '2016-11-30 00:00:00'
         End_Time = pd.to_datetime(End_Time)
         print "end time: ", End_Time.strftime('_%Y_%m_%d_%H')
@@ -317,7 +328,7 @@ if __name__ == "__main__":
         Start_Time = pd.to_datetime(Start_Time)
         print "start time: ", Start_Time.strftime('_%Y_%m_%d_%H')
 
-        End_Time = '2016-11-05 00:00:00'
+        End_Time = '2016-11-08 00:00:00'
         # End_Time = '2016-11-30 00:00:00'
         End_Time = pd.to_datetime(End_Time)
         print "end time: ", End_Time.strftime('_%Y_%m_%d_%H')
@@ -329,13 +340,7 @@ if __name__ == "__main__":
         ####################################################################
         # trump
         Phase3_Part3_Extract_RequestedTags(MySQL_DBkey=MySQL_DBkey, 
-                                           Requested_Tags_list=Trump_list,
-                                           start_time=Start_Time, end_time=End_Time, 
-                                           NetworkedTags_tableName='NetworkedTags_TagUnique' 
-                                           )
-        # hillary
-        Phase3_Part3_Extract_RequestedTags(MySQL_DBkey=MySQL_DBkey, 
-                                           Requested_Tags_list=Hillary_list,
+                                           Requested_Tags_list=Nov7th_list,
                                            start_time=Start_Time, end_time=End_Time, 
                                            NetworkedTags_tableName='NetworkedTags_TagUnique' 
                                            )

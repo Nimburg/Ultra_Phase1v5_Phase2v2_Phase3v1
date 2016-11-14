@@ -157,7 +157,10 @@ def TagUnique_Concatenate_Extract(MySQL_DBkey,
             # if tables are found
             Concatenated_TableNames.append(concatenated_tableName)
 
-        t_time = pin_start_time + time_period
+            # extract to per-period .csv tables ???
+            
+        # update pin_start_time
+        pin_start_time = pin_start_time + time_period
         pin_end_time = pin_end_time + time_period
         # update concatenated_tableName
         concatenated_tableName = 'concatenated_Tags' + pin_start_time.strftime('_%Y_%m_%d_%H')

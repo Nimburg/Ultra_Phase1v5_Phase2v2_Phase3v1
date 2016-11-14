@@ -82,12 +82,7 @@ def TagUnique_Concatenate(MySQL_DBkey, list_tableNames, New_tableName):
 
     list_tableNames: list of table names within a set time-period
     '''
-    # basic data structre
-    # key as tagText
     defaultdict_All_Tags = col.defaultdict(dict)
-    # key and val as: totalCall -> int, etc
-    # defaultdict_All_Tags['tag_example'] = dict() 
-
     ####################################################################
 
     # Connect to the database
@@ -121,8 +116,6 @@ ORDER BY totalCall DESC;"""
                 result = cursor.fetchall()
                 # loop through all rows of this table
                 for entry in result:
-                    # {u'tag': u'hillary2016forsanity', u'tag_Ncall': 1}
-                    # in MySQL, tag format is utf8, but in raw data as ASCII
                     tagText = str( entry['tagText'] ).decode('utf-8').encode('ascii', 'ignore')             
                     totalCall = entry['totalCall']
                     score1_fin = entry['score1_fin']
@@ -264,8 +257,6 @@ LIMIT 10;"""
             result = cursor.fetchall()
             # loop through all rows of this table
             for entry in result:
-                # {u'tag': u'hillary2016forsanity', u'tag_Ncall': 1}
-                # in MySQL, tag format is utf8, but in raw data as ASCII
                 tagText = str( entry['tagText'] ).decode('utf-8').encode('ascii', 'ignore')             
                 totalCall = entry['totalCall']
                 
@@ -305,13 +296,6 @@ LIMIT 10;"""
 
     return list_period_relevence, list_period_hisCall
 
-"""
-####################################################################
-
-# test code 
-
-####################################################################
-"""
 
 
 

@@ -84,18 +84,7 @@ def NetworkedTags_TagUnique_Concatenate(MySQL_DBkey, list_tableNames):
     list_tableNames: list of table names within a set time-period
     '''
     # basic data structre
-    # key as tagText
     Tags_Today_preIter = col.defaultdict(col.defaultdict)
-    # key and val as: totalCall -> int, etc
-    # Tags_Today_preIter['tag_example'] = col.defaultdict() 
-    # 
-    # Tags_Today_preIter['tag_example']['tagText'] = tagText
-    # Tags_Today_preIter['tag_example']['score1_fin'] = numerical values
-    # 
-    # Tags_Today_preIter['tag_example']['tagScore1_text'] = list of scores_float
-    # Tags_Today_preIter['tag_example']['tag_counter_text'] = dict()
-    #                                                       key = tag, value = Ncall
-
     ####################################################################
 
     # Connect to the database
@@ -130,8 +119,6 @@ ORDER BY totalCall DESC"""
                 result = cursor.fetchall()
                 # loop through all rows of this table
                 for entry in result:
-                    # {u'tag': u'hillary2016forsanity', u'tag_Ncall': 1}
-                    # in MySQL, tag format is utf8, but in raw data as ASCII
                     tagText = str( entry['tagText'] ).decode('utf-8').encode('ascii', 'ignore')             
                     # numericals
                     totalCall = entry['totalCall']
