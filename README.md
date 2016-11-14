@@ -93,6 +93,12 @@ To solve the two difficulties, I developed a method of "dynamically expanding th
 
 
 
+![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/Dictionary_Freq.png)
+
+
+
+
+
 -----------------------------------------------------------------------------
 ## Structure of this Project
 
