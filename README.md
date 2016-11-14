@@ -8,13 +8,13 @@
 
 The case which was chosen to study is the 2016 presidential election, since this is certainly a major media and public focus point. Twitter was chosen as the data source, primarily due to its free twitter API. 
 
-During my pursue of the primary objective, I also developed a "prototype" method for **dynamic sentiment analysis of social media text messages, without human-effort-generated training corpus**. The details of this method will be discussed in the section "Ideas for Semi-Automatic Sentiment Analysis" below. 
+During my pursue of the primary objective, I also developed a "prototype" method for **dynamic sentiment analysis of social media text messages, without human-effort-generated training corpus**. The details of this method will be discussed in the **section "Ideas for Semi-Automatic Sentiment Analysis"** below. 
 
 
 -----------------------------------------------------------------------------
 ## How this Objective is Pursued:
 
-This project is currently divided into three phases, each for distinct purposes. Please check session "Structure of this Project" below for information regarding how this project (codes) is structured. Please check session "Introduction to the DataSet of this Project" below for information regarding to data set used for this project. 
+This project is currently divided into three phases, each for distinct purposes. Please check out **section "Structure of this Project"** below for information regarding how this project (codes) is structured. Please check out **section "Introduction to the DataSet of this Project"** below for information regarding to data set used for this project. 
 
 ### Phase1 of this project is devoted to data cleaning and extracting basic relevent information from data set
 
@@ -26,7 +26,7 @@ During my previous attempts at this subject, I realized that purely statistical 
 
 The sentiment analysis in Phase2v2 (2nd re-write of Phase2) is performed using the LSTM (Long Short Time Memory) method, written with Theano. 
 
-There are two challenges here: the first one is how one generates the corpus to train the LSTM network; the second one is how one would build a model that is sensitive to rich expressing method, like the use of satire, irony and exaggeration. The details will be discussed in the section "Ideas for Semi-Automatic Sentiment Analysis" below. 
+There are two challenges here: the first one is how one generates the corpus to train the LSTM network; the second one is how one would build a model that is sensitive to rich expressing method, like the use of satire, irony and exaggeration. The details will be discussed in the **section "Ideas for Semi-Automatic Sentiment Analysis"** below. 
 
 ### Phase3 of this project will be built on Phase1 and Phase2 to generate interesting results
 
@@ -52,7 +52,7 @@ Here, the "cumulated number of call" is the cumulated number of a hash tag's usa
 
 ### Interesting Hash Tags used on the Election Day
 
-First, let's look at hash tags that are directly related to the "voting", in the lead up to Nov 8th. Shown below are the four hash tags "vote", "electionday", "election2016" and "elections2016". One could see their daily usage got a dramatic increase towards Nov 9th(NOTE: as for why those hash tags only recorded a few thousands calls, even on the election day, please check the section "Introduction to the DataSet of this Project" below). All those neutral hash tags demonstrates a positive sentiment scores towards both candidates, indicating supporters on both sides are rallying for their heros. However, the sentiment score towards Trump has a clear lead, indicating that there is more active Trump supporters on twitter, and that less negtive information/hash tags related to Trump are called at this terminal stage.
+First, let's look at hash tags that are directly related to the "voting", in the lead up to Nov 8th. Shown below are the four hash tags "vote", "electionday", "election2016" and "elections2016". One could see their daily usage got a dramatic increase towards Nov 9th(NOTE: as for why those hash tags only recorded a few thousands calls, even on the election day, please check the **section "Introduction to the DataSet of this Project"** below). All those neutral hash tags demonstrates a positive sentiment scores towards both candidates, indicating supporters on both sides are rallying for their heros. However, the sentiment score towards Trump has a clear lead, indicating that there is more active Trump supporters on twitter, and that less negtive information/hash tags related to Trump are called at this terminal stage.
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/ED_vote.gif)
 
@@ -60,7 +60,7 @@ Secondly, let's look at hash tags that are related to the FBI investigation into
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/ED_fbi.gif)
 
-Thus, I am confident that my current method of estimating hash tags' sentiments is working. For details, please see section "Ideas for Semi-Automatic Sentiment Analysis" below. 
+Thus, I am confident that my current method of estimating hash tags' sentiments is working. For details, please see **section "Ideas for Semi-Automatic Sentiment Analysis"** below. 
 
 
 -----------------------------------------------------------------------------
