@@ -8,7 +8,7 @@
 
 The case which was chosen to study is the 2016 presidential election, since this is certainly a major media and public focus point. Twitter was chosen as the data source, primarily due to its free twitter API. 
 
-During my pursue of the primary objective, I also developed a "prototype" method for **dynamic sentiment analysis of social media text messages, without human-effort-generated training corpus**. The details of this method will be discussed in the **section "Ideas for Semi-Automatic Sentiment Analysis"** below. 
+During my pursue of the primary objective, I also developed a "prototype" method for **Semi-Automatic sentiment analysis of social media text messages, without human-effort-generated training corpus**. The details of this method will be discussed in the **section "Ideas for Semi-Automatic Sentiment Analysis"** below. 
 
 
 -----------------------------------------------------------------------------
@@ -68,29 +68,26 @@ In conclusion, I am confident that my current method of estimating hash tags' se
 
 In the context of social media, sentiment analysis occupies a central place when one tries to understand what is going on, since it is not enough to know "who talked with whom", rather, one needs to know "who talked what with whom". However, text messages from social media like twitter, reddit and factbook have some of its unique challenges. 
 
-**The first challenge is of generating a training corpus.** Usually, the "golden standard" corpus when it comes to training a NLP application is a corpus that is manually marked by human beings. However, human-effort-generated corpus takes time, human resources and money. **But the most critical short coming of such a corpus is that it could not keep up with the flowing, dynamic context of a social media.** 
+**The first challenge is of generating a training corpus.** Usually, the "golden standard" corpus when it comes to training a NLP application is a corpus that is manually marked by human beings. However, human-effort-generated corpus takes human resources and money. **But the most critical short coming of such a way of generating corpuses is that it could not keep up with the flowing, dynamic context of social media.** As shown by the previous analyses, sentiments and context on a social media change from day to day, sometimes dramatically. On one hand, millions of text messages are generated daily; on the other hand, most social media based machine learing applications are intended for advertising, promoting and predicting. Thus, it is important to have a method to **rapidly generate a good enough training corpus roughly in real-time speed**.
 
+### How to rapidly generate a good enough training corpus
 
+**What we could do, is to exploit the fact that we are studying tweet messages which mostly come with one or more hash tags.** Thus, one could hand-mark the sentiment of those most frequently used hashtags, and use these hashtags to get a rough estimation of the opinions expressed by tweet messages. In this way, we are laboring over hash tags, emojis or other tokens (usually on the scale of dozens to a few hundreds) rather than directly over the text messages (millions, usually). **Here we made two assumptions:**
+ 1. the sentiment of specific hash tag could be determined easily and accurately, like "vote4XXXX"; 
+ 2. one has to assume that, for most of the time, hash tags with clear sentiment bias are used according to their bias; in other words, expression methods like satire, irony and exaggeration are (relatively) rarely used. 
 
+However, if sticking to these assumptions directly, one would encounter two difficulties: 
+ 1. of those highly used hash tags, most are neutral, like "trump2016" or "hillary2016". These hash tags are not necessarily used to express support or dislike. Thus could not be used directly. 
+ 2. among hash tags that are clearly biased towards certain sentiments, like "vote4XXXX" or "XXXXislier", more of them express negative rather than positive sentiments. As a results, the corpus one could get in this way is heavily biased towards the negative sentiment.
 
+To solve the two difficulties, I developed a method of "dynamically expanding the set of hash tags with sentiment scores". It is worth mentioning that, for my current dataset (Presidential Election 2016), even using the expanded set of marked hash tags to estimate sentiments expressed by tweet messages, the result is already quite accurate. 
+**Summarize the dynamic iteration method:**
+ 1. I manually marked ~200 hash tags that carries a very clear sentiment and that are most frequently used. [Marked Tags](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/tree/master/Ultra_Phase3v1/Data). 
+ 2. I noticed that people tends to call multiple hash tags at once. Thus, it would be possible to build up a "networked" dictionary for each hash tag, recording: what other hash tags are used together, what is the number of usage of those "networked" hash tags.
+ 3. I calculate sentiment scores of any specific neutral hash tag (or augmenting sentiment scores of clearly biased hash tags) using **all** hash tags that are inside its "networked" dictionary, through iteration, on a day-to-day basis. 
+ 4. when calculating sentiment scores of hash tags, the maximum number of iteration, the early stop criteria as well as the learning rate are set up in such a way that: for clearly biased hash tag, its sentiment score would at most change 50% per day; for neutral hash tags, its sentiment score could change almost 100% per day, much more flexible than clearly biased ones.
 
-Naturally, I don't have time to marked hundreds of thousands of tweets. 
-
-
-
-What I could do instead is that, since we are studying tweet messages, they all come with one or more hash tags. Thus, I could hand-mark the most frequently used hashtags, and use these hashtags to get a rough estimation of the opinions expressed by tweet messages. Nonetheless, there are still several challenges related to generating a corpus in this way. 
-
-1st, of those highly used hash tags, some are neutral, like "trump2016" or "hillary2016". These hash tags are not necessarily used to express support or dislike. Thus one could not use them to mark tweet messages. 
-
-2nd, among hash tags that are clearly biased towards certain sentiments, like "vote4XXXX" or "XXXXislier", those hash tags that express dislike are much more frequently used than those express supported. As a results, the corpus one could get in this way is heavily biased towards the "dislike" sentiment. For both candidates (trump and hillary), the number of tweets expressing dislike is easily ten times larger than that of support. 
-
-**I solved these difficulties using a dynamic, iteration method:**
- 1. I manually marked ~200 hash tags that carries a very clear sentiment. [Marked Tags](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/tree/master/Ultra_Phase3v1/Data). 
- 2. I noticed that people tends to call multiple hash tags at once. Thus, it would be possible to build up a "netword" dictionary for each hash tag, recording: what other hash tags are used together, what is the number of usage of those "used together" hash tags. These work are done in Phase1. 
- 3. I could calculate sentiment scores of any specific neutral hash tag (or augmenting sentiment scores of clearly biased hash tags) using **all** hash tags that are inside its "network" dictionary, through iteration, on a day-to-day basis. 
- 4. when calculating sentiment scores of hash tags, the maximum number of iteration, the early stop criteria as well as the learning rate are set up in a way such that: for clearly biased hash tag, its sentiment score would at most change 50% per day; for neutral hash tags, its sentiment score could change almost 100% per day, much more flexible than clearly biased ones.
-
-
+### Training a LSTM using such a corpus
 
 
 
