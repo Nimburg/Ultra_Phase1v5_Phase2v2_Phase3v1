@@ -8,13 +8,13 @@
 
 The case which was chosen to study is the 2016 presidential election, since this is certainly a major media and public focus point. Twitter was chosen as the data source, primarily due to its free twitter API. 
 
-During my pursue of the primary objective of this project, I also developed a "prototype" method for **dynamic sentiment analysis of social media text messages, without human-effort-generated training corpus**. The details of this method will be discussed in the section "Ideas for Semi-Automatic Sentiment Analysis" below. 
+During my pursue of the primary objective, I also developed a "prototype" method for **dynamic sentiment analysis of social media text messages, without human-effort-generated training corpus**. The details of this method will be discussed in the section "Ideas for Semi-Automatic Sentiment Analysis" below. 
 
 
 -----------------------------------------------------------------------------
 ## How this Objective is Pursued:
 
-This project is currently divided into three phases, each for distinct purposes. Please check session "Introduction to the DataSet of this Project" below for information regarding to data set used for this project. Please check session "Structure of this Project" below for information regarding how this project (codes) is structured.
+This project is currently divided into three phases, each for distinct purposes. Please check session "Structure of this Project" below for information regarding how this project (codes) is structured. Please check session "Introduction to the DataSet of this Project" below for information regarding to data set used for this project. 
 
 ### Phase1 of this project is devoted to data cleaning and extracting basic relevent information from data set
 
@@ -22,7 +22,7 @@ The Phase1v5 is the 5th re-write of Phase1. Since we have the 2016 election as o
 
 ### Phase2 of this project is devoted to sentiment analysis
 
-During my previous attempts at this subject, I realized that purely statistical variables, though abundent, is not very effective when it comes to figuring out individual's opinion, nor when it comes to classify what kinds of information certain specific individual is receiving. In short, sentiment analysis of tweet text message is absolutely necessary for achieveing the objective. 
+During my previous attempts at this subject, I realized that purely statistical variables, though abundent, is not very effective when it comes to figuring out individual's opinion, nor when it comes to classify what kinds of information specific individual is receiving. In short, sentiment analysis of tweet text message is absolutely necessary for achieveing the objective. 
 
 The sentiment analysis in Phase2v2 (2nd re-write of Phase2) is performed using the LSTM (Long Short Time Memory) method, written with Theano. 
 
@@ -44,13 +44,18 @@ The number before each hash tag are the number of its usage during the day which
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/tag_july_relevence.gif)
 
-Relevence of each hash tag to a candidate is scaled as: if the hash tag contains keyword "trump"( or "hillary"), then its relevence is set to 10 correspondingly; if the hash tag doesn't contain any keyword but is ALWAYS used with hash tag of relevence 10, then its relevence would stay at 9; the less frequently a hash tag is associated with keyword or hash tags of higher relevence, the lower its relevence score.
+Relevence of each hash tag to a candidate is scaled as: if the hash tag contains keyword "trump"( or "hillary"), then its relevence is set to 10 correspondingly; if the hash tag doesn't contain any keyword but is ALWAYS used with hash tag of relevence 10, then its relevence would stay at 9; the less frequently a hash tag is associated with keyword or hash tags of higher relevence, the lower its relevence score. Note that tags of similar relevences do not necessarily share the same sentiment. 
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/tag_july_HisCall.gif)
 
 Here, the "cumulated number of call" is the cumulated number of a hash tag's usage during the 18-day time window. Naturally, this cumulated number will increase as one moves to a later date. For example, one could clearly see that #demsinphilly is a really hot topic between July 25th and July 29th. 
 
-### Most Used Hash Tags on the Election Day
+### Interesting Hash Tags used on the Election Day
+
+First, let's look at hash tags that are directly related to the "voting", in the lead up to Nov 8th. Shown below are the four hash tags "vote", "electionday", "election2016" and "elections2016". One could see their daily usage got a dramatic increase towards Nov 9th(NOTE: as for why those hash tags only recorded a few thousands calls, even on the election day, please check the section "Introduction to the DataSet of this Project" below). All those neutral hash tags demonstrates a positive sentiment scores towards both candidates, indicating supporters on both sides are rallying for their heros. However, the sentiment score towards Trump has a clear lead, indicating that there is more active Trump supporters on twitter, and that less negtive information/hash tags related to Trump are called at this terminal stage.
+
+![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/ED_vote.gif)
+
 
 
 
@@ -105,6 +110,8 @@ In order to achieved such objective, one has to download and analyze huge amount
 In this case, I have so far collected (commented on Nov 5th, 2016) 28 days' worth of data, among which 18 contineous days in July (July 13th to Aug 2nd, 2016), 7 contineous days in October (Oct 15th to 21st, 2016) and attempting a contineous data set from Oct 31st til some time after Nov8th election day. On average, each day's worth of data is ~7GB with 3 million tweets. I am only collecting tweets with geo-information indicating its user located within the United States. 
 
 It is worth noting that 3 million tweets per day is apparently too few for such a user base. My guess is that the amount of tweets I could collect is limited by my twitter API query speed. However, since tweets are downloaded randomly (those that are got/missed by my API), it won't have any negtive effects on my analysis. 
+
+Furthermore, for most parts of the data analysis, additional filters are put on tweet messages. For example, the number of words within a tweet message needs to be higher than 10, which are not: 1st, mentioned twitter users' names, 2nd 'https' links. Such filters will also reduce the number of tweets that are analyzed in Phase2 and Phase3. 
 
 
 -----------------------------------------------------------------------------
