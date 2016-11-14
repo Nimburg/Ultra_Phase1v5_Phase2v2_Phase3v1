@@ -1,8 +1,0 @@
-scirpts in the scripts folder are for tokenization of data. 
-
-Credits to Josh Schroeder
-
-'''
-# $Id: tokenizer.perl 915 2009-08-10 08:15:49Z philipp $
-# written by Josh Schroeder, based on code by Philipp Koehn
-https://github.com/moses-smt/mosesdecoder/raw/master/scripts/tokenizer/tokenizer.perl
