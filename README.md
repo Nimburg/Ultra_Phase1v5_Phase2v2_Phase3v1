@@ -12,7 +12,7 @@ The case which was chosen to study is the 2016 presidential election, since this
 -----------------------------------------------------------------------------
 ## How this Objective is Pursued:
 
-This project is currently divided into three phases, each for distinct purposes. Please check session "Introduction to the DataSet of this Project" below for information regarding to data set used for this project.
+This project is currently divided into three phases, each for distinct purposes. Please check session "Introduction to the DataSet of this Project" below for information regarding to data set used for this project. Please check session "Structure of this Project" for information regarding how this project (codes) is structured.
 
 **Phase1 of this project is devoted to data cleaning and extracting basic relevent information from data set**
 
@@ -79,6 +79,16 @@ As one could see:
 - # maga follows in the 3rd place. MAGA (short for Make America Great Again) is closely related to Trump's campaign. Different from # imwithher, the sentiment score is clearly positive (negative) towards Trump (Hillary).
 - # hillary is in the 9th place. As with the case of # trump, this tag is more related to discussions about Hillary herself rather than her campaign. In the leading up to election day, the sentiment score towards Hillary is improving, but still negative, indicating considerable proportion of users hold a negative opinion towards Hillary
 - # vote is a hash tag that saw increasing use only when we approaches the election day. This hash tag should be bipartisan, and both its sentiment scores are indeed positive and close to zero. Still, we saw a lead of Trump here. 
+
+
+-----------------------------------------------------------------------------
+## Structure of this Project
+
+- Phase1 is for data cleaning, creating MySQL database and extract hash tags for hand-marking
+- PHase2 Part2 is for scoring tweets using results from Phase3 Part3. Tokenize tweet messages and create dataset for LSTM training and predicting. 
+- v1_LSTM_Main is the LSTM codes, both training and predicting
+- Phase3 Part1 is for extracting daily most used hash tags
+- Phase3 Part3 is for dynamically expand the set of sentiment marked hash tags, on a day-to-day basis. Also extract selected hash tags for visualization. 
 
 
 -----------------------------------------------------------------------------
