@@ -89,7 +89,7 @@ To solve the two difficulties, I developed a method of "dynamically expanding th
 
 ### Training a LSTM using a Semi-Automatically generated corpus
 
-
+The Long Short Term Memory (LSTM) method has been in itself a very powerful method for NLP related applications. There has been [many](http://www.wildml.com/2015/10/recurrent-neural-network-tutorial-part-4-implementing-a-grulstm-rnn-with-python-and-theano/) [posts](http://colah.github.io/posts/2015-08-Understanding-LSTMs/) elaborating how it works as well as [why](http://karpathy.github.io/2015/05/21/rnn-effectiveness/) it is so powerful. 
 
 
 
