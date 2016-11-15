@@ -87,7 +87,7 @@ To solve the two difficulties, I developed a method of "dynamically expanding th
  3. I calculate sentiment scores of any specific neutral hash tag (or augmenting sentiment scores of clearly biased hash tags) using **all** hash tags that are inside its "networked" dictionary, through iteration, on a day-to-day basis. 
  4. when calculating sentiment scores of hash tags, the maximum number of iteration, the early stop criteria as well as the learning rate are set up in such a way that: for clearly biased hash tag, its sentiment score would at most change 50% per day; for neutral hash tags, its sentiment score could change almost 100% per day, much more flexible than clearly biased ones.
 
-### Training a LSTM using such a corpus
+### Training a LSTM using a Semi-Automatically generated corpus
 
 
 
