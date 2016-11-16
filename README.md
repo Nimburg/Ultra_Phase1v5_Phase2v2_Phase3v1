@@ -66,9 +66,9 @@ In conclusion, I am confident that my current method of estimating hash tags' se
 
 In the context of social media, sentiment analysis occupies a central place when one tries to understand what is going on, since it is not enough to know "who talked with whom", rather, one needs to know "who talked what with whom". However, text messages from social media like twitter, reddit and factbook have some of its unique challenges. 
 
-**The first challenge is of generating a training corpus.** Usually, the "golden standard" corpus when it comes to training a sentiment analysis application is a corpus that is manually marked by human beings. However, human-effort-generated corpus takes human resources and money. **But the most critical short coming of such a way of generating corpuses is that it could not keep up with the flowing, dynamic context of social media.** As shown by the previous analyses, sentiments and context on a social media change from day to day, sometimes dramatically. On one hand, millions of text messages are generated daily; on the other hand, most social media based machine learing applications are intended for advertising, promoting and predicting. Thus, it is important to have a method to **rapidly generate a good enough training corpus roughly in real-time speed**.
+**The first challenge is of generating a training corpus.** Usually, the "golden standard" corpus when it comes to training a sentiment analysis application is a corpus that is manually marked by human beings. However, manually generated corpus takes human resources and money. **But the most critical short coming of such a manually generated corpuses is that it could not keep up with the flowing, dynamic context of social media.** As shown by the previous analyses, sentiments and context on a social media change from day to day, sometimes dramatically. On one hand, millions of text messages are generated daily; on the other hand, most social media based machine learing applications are intended for advertising, promoting and predicting. Thus, it is important to have a method to **rapidly generate a good enough training corpus roughly in real-time speed**.
 
-**The second challenge is that text message on social media is usually very short.** Particularly for the case of twitter, where one could not lay down too much words, people's messages are usually very succinct. This means people are making references to many topics/keywords/hashtags of which their meanings and sentiments are already well konwn among twitter users. For the dataset I am using, among tweets that called election-related hashtags, only half would have more than 10 words that are not: other users' names, or http links to some web pages. But at the same time, this challenge represents a unique opportunity. Because people's expressions are so succinct, their languages are less descriptive, and more of what they want to express are allocated to those few keywords and hashtags. Thus, the need to analyze structures of sentences or even paragraphs is less relevent than the need to figure out exactly what sentiments those keywords and hash tags carries, ragarding to the topic under study (in this case, the 2016 election and users' opinion towards Trump and Hillary).
+**The second challenge is that text message on social media is usually very short.** Particularly for the case of twitter, where one could not lay down too much words, people's messages are usually very succinct. This means people are making references to many topics/keywords/hashtags of which their meanings and sentiments are already well konwn among twitter users. For the dataset I am using, among tweets that called election-related hashtags, only half would have more than 10 words that are not: other users' names, or http links to some web pages. But at the same time, this challenge represents a unique opportunity. Because people's expressions are so succinct, their languages are less descriptive, and more of what they want to express are allocated to those few keywords and hashtags. Thus, **the need to analyze structures of sentences or even paragraphs is less relevent than the need to figure out exactly what sentiments each of those keywords and hash tags carries**, ragarding to the topic under study (in this case, the 2016 election and users' opinions towards Trump and Hillary).
 
 ### How to rapidly generate a good enough training corpus
 
@@ -80,8 +80,8 @@ However, if sticking to these assumptions directly, one would encounter two diff
  1. of those highly used hash tags, most are neutral, like "trump2016" or "hillary2016". These hash tags are not necessarily used to express support or dislike. Thus could not be used directly. 
  2. among hash tags that are clearly biased towards certain sentiments, like "vote4XXXX" or "XXXXislier", more of them express negative rather than positive sentiments. As a results, the corpus one could get in this way is heavily biased towards the negative sentiment.
 
-To solve the two difficulties, I developed a method of "dynamically expanding the set of hash tags with sentiment scores". It is worth mentioning that, for my current dataset (Presidential Election 2016), even using the expanded set of marked hash tags to estimate sentiments expressed by tweet messages, the result is already quite accurate. 
-**Summarize the dynamic iteration method:**
+To solve the two difficulties, I developed a method of "dynamically expanding the set of hash tags with sentiment scores". It is worth mentioning that, for my current dataset (Presidential Election 2016), even using the expanded set of marked hash tags to estimate sentiments expressed by tweet messages, the result is already quite accurate. As explained above, this might due to the fact that tweet messages are usually succinct, and that more of the information is centered around hash tags and keywords. 
+**Summarizing the Dynamic Iteration Method:**
  1. I manually marked ~200 hash tags that carries a very clear sentiment and that are most frequently used. [Marked Tags](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/tree/master/Ultra_Phase3v1/Data). 
  2. I noticed that people tends to call multiple hash tags at once. Thus, it would be possible to build up a "networked" dictionary for each hash tag, recording: what other hash tags are used together, what is the number of usage of those "networked" hash tags.
  3. I calculate sentiment scores of any specific neutral hash tag (or augmenting sentiment scores of clearly biased hash tags) using **all** hash tags that are inside its "networked" dictionary, through iteration, on a day-to-day basis. 
@@ -89,7 +89,17 @@ To solve the two difficulties, I developed a method of "dynamically expanding th
 
 ### Training a LSTM using a Semi-Automatically generated corpus
 
-The Long Short Term Memory (LSTM) method has been in itself a very powerful method for NLP related applications. There has been [many](http://www.wildml.com/2015/10/recurrent-neural-network-tutorial-part-4-implementing-a-grulstm-rnn-with-python-and-theano/) [posts](http://colah.github.io/posts/2015-08-Understanding-LSTMs/) elaborating how it works as well as [why](http://karpathy.github.io/2015/05/21/rnn-effectiveness/) it is so powerful. 
+The Long Short Term Memory (LSTM) method has been in itself a very powerful method for NLP related applications. There has been [many](http://www.wildml.com/2015/10/recurrent-neural-network-tutorial-part-4-implementing-a-grulstm-rnn-with-python-and-theano/) [posts](http://colah.github.io/posts/2015-08-Understanding-LSTMs/) elaborating how it works as well as [why](http://karpathy.github.io/2015/05/21/rnn-effectiveness/) it is so powerful. Like most neural network methods, LSTM is a supervised machine learning methods. **However, what we are trying to do here, is not a strictly speaking supervised method**, because we don't have a reliable training dataset. 
+
+
+
+
+
+
+
+
+
+
 
 The picture between is the top 150 most frequently used words from the corpus, where there are ~ 60000 unique words. One could see ~20% of them are hash tags.
 
