@@ -4,7 +4,7 @@
 -----------------------------------------------------------------------------
 ## Objective of this Project:
 
-**The primary objective of this project is to practice some big-data analysis, like topic trending, user behavior profiling and sentiment analysis on text messages.** 
+**The primary objective of this project is to study "How individual's opinion towards specific issue might shift under external influence".** What I have finished through this project includes some basis big-data analysis, like topic trending, user behavior profiling and sentiment analysis on text messages.
 
 The case which was chosen to study is the 2016 presidential election, since this is certainly a major media and public focus point. Twitter was chosen as the data source, primarily due to its free twitter API. 
 
@@ -22,9 +22,7 @@ The Phase1v5 is the 5th re-write of Phase1. Since we have the 2016 election as o
 
 ### Phase2 of this project is devoted to sentiment analysis
 
-During my previous attempts at this subject, I realized that purely statistical variables, though abundent, is not very effective when it comes to figuring out individual's opinion, nor when it comes to classify what kinds of information specific individual is receiving. In short, sentiment analysis of tweet text message is absolutely necessary for achieving the objective. 
-
-The sentiment analysis in Phase2v2 (2nd re-write of Phase2) is performed using the LSTM (Long Short Time Memory) method, written with Theano. 
+During my previous attempts at this subject, I realized that purely statistical variables, though abundent, is not very effective when it comes to figuring out individual's opinion, nor when it comes to classify what kinds of information specific individual is receiving. For example, if we want to determine whether a specific user holds a positive or negative opinion toward a candidate, it is not enough to just check "whether this user called this candidate's name in his message". Instead, one needs to analyze "what this user said about this candidate in his message". In short, sentiment analysis of tweet text message is absolutely necessary for achieving the objective. 
 
 There are two challenges here: the first one is how one generates the corpus to train the LSTM network; the second one is how one would build a model that is sensitive to rich expression method, like satire, irony and exaggeration. The details will be discussed in the **section "Ideas for Semi-Automatic Sentiment Analysis"** below. 
 
@@ -68,7 +66,9 @@ In conclusion, I am confident that my current method of estimating hash tags' se
 
 In the context of social media, sentiment analysis occupies a central place when one tries to understand what is going on, since it is not enough to know "who talked with whom", rather, one needs to know "who talked what with whom". However, text messages from social media like twitter, reddit and factbook have some of its unique challenges. 
 
-**The first challenge is of generating a training corpus.** Usually, the "golden standard" corpus when it comes to training a NLP application is a corpus that is manually marked by human beings. However, human-effort-generated corpus takes human resources and money. **But the most critical short coming of such a way of generating corpuses is that it could not keep up with the flowing, dynamic context of social media.** As shown by the previous analyses, sentiments and context on a social media change from day to day, sometimes dramatically. On one hand, millions of text messages are generated daily; on the other hand, most social media based machine learing applications are intended for advertising, promoting and predicting. Thus, it is important to have a method to **rapidly generate a good enough training corpus roughly in real-time speed**.
+**The first challenge is of generating a training corpus.** Usually, the "golden standard" corpus when it comes to training a sentiment analysis application is a corpus that is manually marked by human beings. However, human-effort-generated corpus takes human resources and money. **But the most critical short coming of such a way of generating corpuses is that it could not keep up with the flowing, dynamic context of social media.** As shown by the previous analyses, sentiments and context on a social media change from day to day, sometimes dramatically. On one hand, millions of text messages are generated daily; on the other hand, most social media based machine learing applications are intended for advertising, promoting and predicting. Thus, it is important to have a method to **rapidly generate a good enough training corpus roughly in real-time speed**.
+
+**The second challenge is that text message on social media is usually very short.** Particularly for the case of twitter, where one could not lay down too much words, people's messages are usually very succinct. This means people are making references to many topics/keywords/hashtags of which their meanings and sentiments are already well konwn among twitter users. For the dataset I am using, among tweets that called election-related hashtags, only half would have more than 10 words that are not: other users' names, or http links to some web pages. But at the same time, this challenge represents a unique opportunity. Because people's expressions are so succinct, their languages are less descriptive, and more of what they want to express are allocated to those few keywords and hashtags. Thus, the need to analyze structures of sentences or even paragraphs is less relevent than the need to figure out exactly what sentiments those keywords and hash tags carries, ragarding to the topic under study (in this case, the 2016 election and users' opinion towards Trump and Hillary).
 
 ### How to rapidly generate a good enough training corpus
 
@@ -113,7 +113,7 @@ A few notes: my corpus for LSTM has 86979/4578/22888 sentences for training/vali
 
 In order to achieved such objective, one has to download and analyze huge amounts of social media data. The reason that one needs such a large, continuous data set is because: 1st, since we are trying to understand individual's shifting opinions, we naturally what to have a continuous data set so as not to "miss something"; 2nd, since the fact that individual usually takes some time to have his/her mind changed, and that most people don't spend all day on twitter, thus each individual's activity is rather sparse in time, thus one need to collect data for a reasonably long period of time.
 
-In this case, I have so far collected (commented on Nov 5th, 2016) 28 days' worth of data, among which 18 contineous days in July (July 13th to Aug 2nd, 2016), 7 contineous days in October (Oct 15th to 21st, 2016) and attempting a contineous data set from Oct 31st til some time after Nov8th election day. On average, each day's worth of data is ~7GB with 3 million tweets. I am only collecting tweets with geo-information indicating its user located within the United States. 
+In this case, I have so far collected (commented on Nov 15th, 2016) ~40 days' worth of data, among which 18 contineous days in July (July 13th to Aug 2nd, 2016), 7 contineous days in October (Oct 15th to 21st, 2016) and a contineous data set from Oct 31st onwards. On average, each day's worth of data is ~7GB with 3 million tweets. I am only collecting tweets with geo-information indicating its user located within the United States. 
 
 It is worth noting that 3 million tweets per day is apparently too few for such a user base. My guess is that the amount of tweets I could collect is limited by my twitter API query speed. However, since tweets are downloaded randomly (those that are got/missed by my API), it won't have any negtive effects on my analysis. 
 
