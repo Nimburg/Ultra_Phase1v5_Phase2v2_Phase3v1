@@ -4,7 +4,7 @@
 -----------------------------------------------------------------------------
 ## Objective of this Project:
 
-**The primary objective of this project is to study "How individual's opinion towards specific issue might shift under external influence".** What I have finished through this project includes some basis big-data analysis, like topic trending, user behavior profiling and sentiment analysis on text messages.
+**The primary objective of this project is to study "How individual's opinion towards specific issue might shift under external influence".** What I have finished through this project includes some basic big-data analysis, like topic trending, user behavior profiling and sentiment analysis on text messages.
 
 The case which was chosen to study is the 2016 presidential election, since this is certainly a major media and public focus point. Twitter was chosen as the data source, primarily due to its free twitter API. 
 
