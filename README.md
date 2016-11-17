@@ -91,13 +91,17 @@ To solve the two difficulties, I developed a method of "dynamically expanding th
 
 
 
+
+
+
+
+
+![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/Filter_Ratio_Charts.png)
+
+
 ### Training a LSTM using a Semi-Automatically generated corpus
 
 The Long Short Term Memory (LSTM) method has been in itself a very powerful method for NLP related applications. There has been [many](http://www.wildml.com/2015/10/recurrent-neural-network-tutorial-part-4-implementing-a-grulstm-rnn-with-python-and-theano/) [posts](http://colah.github.io/posts/2015-08-Understanding-LSTMs/) elaborating how it works as well as [why](http://karpathy.github.io/2015/05/21/rnn-effectiveness/) it is so powerful. Like most neural network methods, LSTM is a supervised machine learning method. **However, what we are trying to do here, is not a strictly speaking supervised method**, because we don't have a perfectly reliable training dataset. 
-
-
-
-
 
 
 
