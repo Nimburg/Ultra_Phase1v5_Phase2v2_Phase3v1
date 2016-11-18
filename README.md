@@ -100,9 +100,9 @@ Below is a summary of prediction results, using data from Nov7th 0AM to Nov9th 1
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/Filter_Ratio_Charts.png)
 
 I feel that it is necessary to offer an elaboration on **Why using hash tags alone, without looking at the text message itself, could achieve a reasonably good prediction accuracy**. **This has everything to do with twitter users' habit of writing their messages and expressing their opinions.** Twitter users have several distinct habits: 
- **1. their messages are very succinct**. This means twitter users have to express whatever they want to say through those commonly used keywords and hash tags. Thus, information is highly concentrated, to the point where, if one get the few keywords right, one could get the entire message right. 
- **2. they use hash tag**. In addition to the first point, the use of hash tag also normalized twitter users' language. In other words, there is little need for us to normalize twitter users' languages because: 1st, their key points are concentrated in the few hash tags they called; 2nd, hash tags are already normalized.
- **3. tweet messages are context-heavy**. People write tweets to communicate with their friends, with whom they share a lot of time together. Thus, twitter user usually don't need to elaborate on what they are talking about; instead, they focus on what they feel about the commonly known topics. Words like "tax paper", "emails", "Benghazi" are much more *meaningful* that they usually are. However, traditional NLP methods won't be able to catch it. 
+ -**their messages are very succinct**. This means twitter users have to express whatever they want to say through those commonly used keywords and hash tags. Thus, information is highly concentrated, to the point where, if one get the few keywords right, one could get the entire message right. 
+ -**they use hash tag**. In addition to the first point, the use of hash tag also normalized twitter users' language. In other words, there is little need for us to normalize twitter users' languages because: 1st, their key points are concentrated in the few hash tags they called; 2nd, hash tags are already normalized.
+ -**tweet messages are context-heavy**. People write tweets to communicate with their friends, with whom they share a lot of time together. Thus, twitter user usually don't need to elaborate on what they are talking about; instead, they focus on what they feel about the commonly known topics. Words like "tax paper", "emails", "Benghazi" are much more *meaningful* that they usually are. However, traditional NLP methods won't be able to catch it. 
 
 Furthermore, it is straight forward to see that, **the iteration method here is effectively a linear method of approximating the conditional probability among hash tags.** In principle, the stronger a correlation between two hash tags, the more similar sentiment they should carry, thus the closer their sentiment scores would be. Please note that, in such a linear method, the *learning rate* for each *appearance* of any combination of hash tags is the same (of course, certain combination of hash tags have much more appearances than others). 
 
@@ -110,16 +110,14 @@ Naturally, one could introduce a nonlinear method of approximating the condition
 
 ### Training a LSTM using a Semi-Automatically generated corpus
 
-The Long Short Term Memory (LSTM) method has been in itself a very powerful method for NLP related applications. There has been [many](http://www.wildml.com/2015/10/recurrent-neural-network-tutorial-part-4-implementing-a-grulstm-rnn-with-python-and-theano/) [posts](http://colah.github.io/posts/2015-08-Understanding-LSTMs/) elaborating how it works as well as [why](http://karpathy.github.io/2015/05/21/rnn-effectiveness/) it is so powerful. Like most neural network methods, LSTM is a supervised machine learning method. **However, what we are trying to do here, is not a strictly speaking supervised method**, because we don't have a perfectly reliable training dataset. 
+The Long Short Term Memory (LSTM) method has been in itself a very powerful method for NLP related applications. There has been [many](http://www.wildml.com/2015/10/recurrent-neural-network-tutorial-part-4-implementing-a-grulstm-rnn-with-python-and-theano/) [posts](http://colah.github.io/posts/2015-08-Understanding-LSTMs/) elaborating how it works as well as [why](http://karpathy.github.io/2015/05/21/rnn-effectiveness/) it is so powerful. Like most neural network methods, LSTM is a supervised machine learning method. **However, what we are trying to do here, is not a strictly speaking supervised method**, because we don't have a perfectly reliable training dataset. **Instead, we are trying to use the LSTM to obtain "a wider spread": compared with using only the hash tags for prediction, we also want to include some frequently used keywords in the text message.**
 
-**Instead, we are trying to use the LSTM to obtain "a wider spread": compared with using only the hash tags for prediction, we also want to include some frequently used keywords in the text message.**
+At its current configuration, my codes performs NLP and LSTM in this way: 
+ 1. using NLTK package to tokenize tweet message, creating word-to-index and index-to-word dictionary; after this step, each tweet message will be represented as a list of indexes. 
+ 2. training LSTM using this *Semi-Automatically* generated training data set. The LSTM layer returns a list of hidden value vectors (length of which equal to the length of each sentence). The prediction for each sentence are made by performing a simple numerical average of the hidden value vectors over each sentence. 
+Admittedly, this is a really simple LSTM approach. For the first part, I don't think more advanced NLP operations would necessarily help. For the second part however, I think some improvements might be possible. 
 
-
-
-
-
-
-The picture between is the top 150 most frequently used words from the corpus, where there are ~ 60000 unique words in the full word-to-index dictionary. One could see ~20% of them are hash tags.
+The picture below is the top 150 most frequently used words from the corpus, where there are ~ 60000 unique words in the full word-to-index dictionary. One could see ~20% of them are hash tags. Additionally, ~10% are non-hash tag words closely related to twitter users opinions. For a fully trained LSTM on this *Semi-Automatically* generated training corpus, most of the weight should be allocated on the hash tags. However, if a *"wider spread"* (*achieved by adjusting the early stop condition?*) could catch those non-hash tag keywords, the LSTM model's prediction might show some improvements over predictions by hash tags alone. 
 
 ![alt tag]( https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/Dict_Chart_2.png)
 
