@@ -74,28 +74,24 @@ In the context of social media, sentiment analysis occupies a central place when
 
 ### Estimating Sentiments Carried by Hash Tags and Generating Corpus using Hash Tags
 
-**What we are doing here, is to exploit the fact that we are studying tweet messages which mostly come with one or more hash tags.** Thus, one could hand-mark the sentiment of those most frequently used hash tags, and use these hash tags to get a rough estimation of the opinions expressed by tweet messages. In this way, we are laboring over hash tags, emojis or other tokens (usually on the scale of dozens to a few hundreds) rather than directly over the text messages (millions, usually). **Here we made two assumptions:**
+**What we are doing here, is to exploit the fact that we are studying tweet messages which mostly come with one or more hash tags.** Thus, one could hand-mark the sentiment of those most frequently used hash tags, and use these hash tags to get a rough estimation of the opinions expressed by tweet messages. In this way, we are laboring over hash tags, emojis or other tokens (usually on the scale of dozens to a few hundreds) rather than directly over the text messages (hundreds of thousands, usually). **Here we made two assumptions:**
  1. the sentiment of specific hash tag could be determined easily and accurately, like "vote4XXXX"; 
- 2. one has to assume that, for most of the time, hash tags with clear sentiment bias are used according to their biases; in other words, expression methods like satire, irony and exaggeration are (relatively) rarely used. 
+ 2. one has to assume that, for most of the time, hash tags with clear sentiment bias are used according to their biases; in other words, expression methods like satire, irony and exaggeration are rarely used. 
 
 However, if sticking to these assumptions directly, one would encounter two difficulties: 
- 1. of those highly used hash tags, most are neutral, like "trump2016" or "hillary2016". These hash tags are not necessarily used to express support or dislike. Thus could not be used directly. 
+ 1. of those highly used hash tags, most are neutral, like "trump2016" or "hillary2016". These hash tags are not necessarily used to express support or dislike. Thus could not be used directly to implicate sentiment of tweet message. 
  2. among hash tags that are clearly biased towards certain sentiments, like "vote4XXXX" or "XXXXislier", more of them express negative rather than positive sentiments. As a results, the corpus one could get in this way is heavily biased towards the negative sentiment.
 
-To solve the two difficulties, I developed a method of "dynamically expanding the set of hash tags with sentiment scores". It is worth mentioning that, for my current dataset (Presidential Election 2016), even using the expanded set of marked hash tags to estimate sentiments expressed by tweet messages, the result is already quite accurate. As explained above, this might due to the fact that tweet messages are usually succinct, and that more of the information is centered around hash tags and keywords. 
+To solve the two difficulties, I developed a method of "dynamically expanding the set of hash tags with sentiment scores". The idea is that, we could use those ~200 [hand-marked hash tags](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/tree/master/Ultra_Phase3v1/Data) as a starting point. Then, through each iteration, hash tags that are used with one or several of those hand-marked hash tags will have their (originally neutral) sentiment scores adjusted towards those hand-marked ones. At the same time, those hand-marked ones will also have their sentiment scores adjusted according to what other hash tags they were used together. 
 **Summarizing the Dynamic Iteration Method:**
  1. I manually marked ~200 hash tags that carries a very clear sentiment and that are most frequently used. [Marked Tags](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/tree/master/Ultra_Phase3v1/Data). 
  2. I noticed that people tends to call multiple hash tags at once. Thus, it would be possible to build up a "networked" dictionary for each hash tag, recording: what other hash tags are used together, what is the number of usage of those "networked" hash tags.
  3. I calculate sentiment scores of any specific neutral hash tag (or augmenting sentiment scores of clearly biased hash tags) using **all** hash tags that are inside its "networked" dictionary, through iteration, on a day-to-day basis. 
  4. when calculating sentiment scores of hash tags, the maximum number of iteration, the early stop criteria as well as the learning rate are set up in such a way that: for clearly biased hash tag, its sentiment score would at most change 50% per day; for neutral hash tags, its sentiment score could change almost 100% per day, much more flexible than clearly biased ones.
 
+It is worth mentioning that, for my current dataset (Presidential Election 2016), even using the expanded set of marked hash tags to estimate sentiments of tweet messages directly, without actually looking at the text message itself, the result is already quite accurate. As explained above, this might due to the fact that tweet messages are usually succinct, and that more of the information is centered around hash tags and keywords.
+
 ### Estimating Sentiment of Tweets using only Hash Tags
-
-
-
-
-
-
 
 Below is a summary of prediction results, using data from Nov7th 0AM to Nov9th 12PM. I also manually marked ~300 tweets from Nov 7th to estimate the correct ratio of predictions made by Joint hash tag sets (using both the ~200 hand-marked hash tags, AND the much larger, expanded hash tags set from the iteration process). One could find them [Here](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/Prediction_by_Tags_only.xlsx).
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/Filter_Ratio_Charts.png)
