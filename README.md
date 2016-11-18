@@ -97,7 +97,7 @@ To solve the two difficulties, I developed a method of "dynamically expanding th
 
 
 
-
+Below is a summary of prediction results, using data from Nov7th 0AM to Nov9th 12PM. I also manually marked ~300 tweets from Nov 7th to estimate the correct ratio of predictions made by Joint hash tag sets (using both the ~200 hand-marked hash tags, AND the much larger, expanded hash tags set from the iteration process). One could find them [Here](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/Prediction_by_Tags_only.xlsx).
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/Filter_Ratio_Charts.png)
 
 
