@@ -66,7 +66,7 @@ In conclusion, I am confident that my current method of estimating hash tags' se
 -----------------------------------------------------------------------------
 ## Ideas for Semi-Automatic Sentiment Analysis
 
-In the context of social media, sentiment analysis occupies a central place when one tries to understand what is going on, since it is not enough to know "who talked with whom", rather, one needs to know "who talked what with whom". However, text messages from social media like Twitter, Reddit and Facebook have some of its unique challenges. 
+In the context of social media, sentiment analysis occupies a central place when one tries to understand what is going on, since it is not enough to know "who talked with whom", rather, one needs to know "who talked what with whom". However, text messages from social media like Twitter, Reddit and Facebook have some of its unique challenges. (*Please note that, so far we are only working on tweet messages that comes with one or more hash tags. Tweet messages without any hash tags are not under study at this point.*)
 
 **The first challenge is of generating a training corpus.** Usually, the "golden standard" corpus when it comes to training a sentiment analysis application is a corpus that is manually marked by human beings. However, manually generated corpus takes human resources and money. **But the most critical short coming of such a manually generated corpuses is that it could not keep up with the flowing, dynamic context of social media.** As shown by the previous analyses, sentiments and context on a social media change from day to day, sometimes dramatically. On one hand, millions of text messages are generated daily; on the other hand, most social media based machine learning applications are intended for advertising, promoting and predicting. Thus, it is important to have a method to **rapidly generate a good enough training corpus roughly in real-time speed**.
 
@@ -97,10 +97,7 @@ Below is a summary of prediction results, using data from Nov7th 0AM to Nov9th 1
 
 ![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/Filter_Ratio_Charts.png)
 
-
-
-
-
+I feel that it is necessary to offer an elaboration on **Why using hash tags alone, without looking at the text message itself, could achieve a reasonably good prediction accuracy**. **This has everything to do with twitter users' habit of writing their messages and expressing their opinions.** Twitter users have several distinct habits: **first, their messages are very succinct**. This means twitter users have to express whatever they want to say through those commonly used keywords and hash tags. Thus, information is highly concentrated, to the point where, if one get the few keywords right, one could get the entire message right. **second, they use hash tag**. In addition to the first point, the use of hash tag also normalized twitter users' language. In other words, there is little need for us to normalize twitter users' languages because: 1st, their key points are concentrated in the few hash tags they called; 2nd, hash tags are already normalized. **third, tweet messages are context-heavy**. People write tweets to communicate with their friends, with whom they share a lot of time together. Thus, twitter user usually don't need to elaborate on what they are talking about; instead, they focus on what they feel about the commonly known topics. Words like "tax paper", "emails", "Benghazi" are much more *meaningful* that they usually are. However, traditional NLP methods won't be able to catch it. 
 
 
 ### Training a LSTM using a Semi-Automatically generated corpus
