@@ -115,6 +115,7 @@ The Long Short Term Memory (LSTM) method has been in itself a very powerful meth
 At its current configuration, my codes performs NLP and LSTM in this way: 
  1. using NLTK package to tokenize tweet message, creating word-to-index and index-to-word dictionary; after this step, each tweet message will be represented as a list of indexes. 
  2. training LSTM using this *Semi-Automatically* generated training data set. The LSTM layer returns a list of hidden value vectors (length of which equal to the length of each sentence). The prediction for each sentence are made by performing a simple numerical average of the hidden value vectors over each sentence. 
+
 Admittedly, this is a really simple LSTM approach. For the first part, I don't think more advanced NLP operations would necessarily help. For the second part however, I think some improvements might be possible. 
 
 The picture below is the top 150 most frequently used words from the corpus, where there are ~ 60000 unique words in the full word-to-index dictionary. One could see ~20% of them are hash tags. Additionally, ~10% are non-hash tag words closely related to twitter users opinions. For a fully trained LSTM on this *Semi-Automatically* generated training corpus, most of the weight should be allocated on the hash tags. However, if a *"wider spread"* (*achieved by adjusting the early stop condition?*) could catch those non-hash tag keywords, the LSTM model's prediction might show some improvements over predictions by hash tags alone. 
