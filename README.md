@@ -112,16 +112,16 @@ Naturally, one could introduce a nonlinear method of approximating the condition
 
 The Long Short Term Memory (LSTM) method has been in itself a very powerful method for NLP related applications. There has been [many](http://www.wildml.com/2015/10/recurrent-neural-network-tutorial-part-4-implementing-a-grulstm-rnn-with-python-and-theano/) [posts](http://colah.github.io/posts/2015-08-Understanding-LSTMs/) elaborating how it works as well as [why](http://karpathy.github.io/2015/05/21/rnn-effectiveness/) it is so powerful. Like most neural network methods, LSTM is a supervised machine learning method. **However, what we are trying to do here, is not a strictly speaking supervised method**, because we don't have a perfectly reliable training dataset. 
 
+**Instead, we are trying to use the LSTM to obtain "a wider spread": compared with using only the hash tags for prediction, we also want to include some frequently used keywords in the text message.**
 
 
 
 
 
 
+The picture between is the top 150 most frequently used words from the corpus, where there are ~ 60000 unique words in the full word-to-index dictionary. One could see ~20% of them are hash tags.
 
-The picture between is the top 150 most frequently used words from the corpus, where there are ~ 60000 unique words. One could see ~20% of them are hash tags.
-
-![alt tag](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/Dictionary_Freq.png)
+![alt tag]( https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/Results_Demo/Dict_Chart_2.png)
 
 A few notes: my corpus for LSTM has 86979/4578/22888 sentences for training/validation/testing. For a deep training (more than 3 epoch ~2.5% stable error for validation and testing), the number of mismatches between LSTM prediction and prediction solely from tags is ~3000 sentences. For a shallow training with early stop (1 epoch >3% error for validation and testing), the number of mismatches is ~4000 sentences.
 
