@@ -1,5 +1,6 @@
 # Project Ultra
 
+*please check out the much more thorough document for this project [here](https://github.com/Nimburg/Ultra_Phase1v5_Phase2v2_Phase3v1/blob/master/POC_Semi_Automatic_Sentiment_Analysis.pdf). Programs will be continually updated; this Readme.md will no longer be updated.*
 
 -----------------------------------------------------------------------------
 ## Objective of this Project:
