@@ -5,11 +5,9 @@
 -----------------------------------------------------------------------------
 ## Objective of this Project:
 
-**The primary objective of this project is to study "How individual's opinion towards specific issue might shift under external influence".** What I have finished through this project includes some basic big-data analysis, like topic trending, user behavior profiling and sentiment analysis on text messages.
+**The long-term objective of this project is to study "How individual's opinion towards specific issue might shift under external influence".** What I have so far finished through this project includes some basic big-data analysis, like topic trending, user behavior profiling and sentiment analysis on text messages. Particularly, I propose a "prototype" method for **Semi-Unsupervised sentiment analysis of social media text messages, without manually generated training corpus**. The details of this method will be discussed in the **section "Ideas for Semi-Automatic Sentiment Analysis"** below. 
 
 The case which was chosen to study is the 2016 presidential election, since this is certainly a major media and public focus point. Twitter was chosen as the data source, primarily due to its free twitter API. 
-
-During my pursue of the primary objective, I also developed a "prototype" method for **Semi-Automatic sentiment analysis of social media text messages, without human-effort-generated training corpus**. The details of this method will be discussed in the **section "Ideas for Semi-Automatic Sentiment Analysis"** below. 
 
 
 -----------------------------------------------------------------------------
